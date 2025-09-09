@@ -1,0 +1,37 @@
+# Core LangChain and LangGraph packages
+langchain
+langchain-openai
+langchain-community
+langgraph
+langgraph-supervisor
+
+# Vector Database and Embeddings
+faiss-cpu
+# Alternative GPU version (comment out faiss-cpu if using this):
+# faiss-gpu
+
+# Data Models and Validation
+pydantic
+
+# Jupyter Support (optional - for notebook environments)
+ipython
+jupyter
+
+# HTTP Requests (if needed for external APIs)
+requests
+
+# Environment Variables
+python-dotenv
+
+# Additional utilities
+numpy
+typing-extensions
+
+# Development and Testing (optional)
+pytest
+black
+flake8
+
+# Optional: For production deployment
+uvicorn
+fastapi

@@ -1,0 +1,13 @@
+langchain
+langchain-tavily
+langchain_community
+langchain_openai
+langgraph
+langgraph-supervisor
+
+trustcall
+yfinance
+python-dotenv
+faiss-cpu
+pydantic
+typing-extensions
