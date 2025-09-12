@@ -82,3 +82,7 @@ Uses LangGraph's StateGraph with MessagesState for maintaining conversation cont
 
 ### Configuration Management
 All OpenAI settings are centralized in `config/settings.py` and loaded from environment variables with sensible defaults.
+
+
+### Context7 MCP Server
+Alsways use the "LangGraph (llmstxt)" for MCP server

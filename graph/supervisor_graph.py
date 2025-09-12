@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph, START, END
 from models.data_models import MessagesState
 from tools.ticket_tools import refine_query
-from graph.nodes import pattern_analysis, label_analysis, query_refinement, query_refinement_check
+from graph.nodes import pattern_analysis, label_analysis, query_refinement, query_refinement_check, ticket_refinement_step, reasoning_agent_node
 from agents.specialized_agents import (
     reasoning_agent, supervisor_agent, info_retriever, 
     execution_agent, validation_agent, report_agent
@@ -13,10 +13,10 @@ def create_supervisor_graph():
     supervisor = (
         StateGraph(MessagesState)
         .add_node("Query Refinement Check", query_refinement_check)
-        .add_node("Refine Query Step", refine_query)
-        .add_node("Pattern Analysis Step", pattern_analysis)
-        .add_node("Label Analysis Step", label_analysis)
-        .add_node(reasoning_agent)
+        .add_node("Ticket Refinement Step", ticket_refinement_step)
+        # .add_node("Pattern Analysis Step", pattern_analysis)
+        # .add_node("Label Analysis Step", label_analysis)
+        .add_node("Reasoning Agent", reasoning_agent_node)
         .add_node(supervisor_agent, destinations=("MM Information Retrieval Agent", "MM Execution Agent", "MM Validation Agent", "MM Report Agent"))
         .add_node(info_retriever)
         .add_node(execution_agent)
@@ -24,9 +24,10 @@ def create_supervisor_graph():
         .add_node(report_agent)
         .add_edge(START, "Query Refinement Check")
         .add_conditional_edges("Query Refinement Check", query_refinement)
-        .add_edge("Refine Query Step", "Label Analysis Step")
-        .add_edge("Label Analysis Step", "Pattern Analysis Step")
-        .add_edge("Pattern Analysis Step", "Reasoning Agent")
+        # .add_edge("Refine Query Step", "Label Analysis Step")
+        # .add_edge("Label Analysis Step", "Pattern Analysis Step")
+        # .add_edge("Pattern Analysis Step", "Reasoning Agent")
+        .add_edge("Ticket Refinement Step", "Reasoning Agent")
         .add_edge("Reasoning Agent", "Domain Supervisor Agent")
         .add_edge("MM Information Retrieval Agent", "Domain Supervisor Agent")
         .add_edge("MM Execution Agent", "Domain Supervisor Agent")

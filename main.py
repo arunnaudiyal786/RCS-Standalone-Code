@@ -25,9 +25,23 @@ def main():
     except FileNotFoundError:
         print("Could not open graph automatically. Please view supervisor_graph.png manually.")
 
-    # Example usage (you can extend this)
+    # Example usage - actually run the workflow
     print("\nMulti-agent system initialized successfully!")
-    print("You can now use the supervisor graph to process tickets.")
+    print("Processing sample ticket...")
+    
+    # Run the workflow with a sample input to test the session storage
+    try:
+        for chunk in supervisor.stream(
+            {"messages": [{"role": "user", "content": "Process the sample ticket"}]},
+            config={"configurable": {"thread_id": "test_session_1"}}
+        ):
+            pretty_print_messages(chunk)
+            
+        print("\nWorkflow execution completed. Check the sessions folder for output files.")
+        
+    except Exception as e:
+        print(f"Error running workflow: {e}")
+        print("Graph visualization completed successfully.")
 
 
 if __name__ == "__main__":

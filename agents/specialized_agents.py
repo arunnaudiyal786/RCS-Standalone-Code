@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from config.settings import OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE, OPENAI_MAX_TOKENS
 from tools.ticket_tools import retrieve_similar_tickets, execute_resolution_step, validate_resolution
-from tools.handoff_tools import assign_to_info_retriever_agent, assign_to_execution_agent, assign_to_validation_agent
+from tools.handoff_tools import assign_to_info_retriever_agent_with_task_description, assign_to_execution_agent_with_task_description, assign_to_validation_agent_with_task_description, assign_to_info_retriever_agent_with_handoff, assign_to_execution_agent_with_handoff, assign_to_validation_agent_with_handoff
 
 
 # Info Retriever Agent
@@ -78,18 +78,31 @@ supervisor_agent = create_react_agent(
     model=ChatOpenAI(
         openai_api_key=OPENAI_API_KEY,
         model=OPENAI_MODEL,
-        temperature=OPENAI_TEMPERATURE,
-        max_tokens=OPENAI_MAX_TOKENS
+        temperature=OPENAI_TEMPERATURE
     ),
-    tools=[assign_to_info_retriever_agent, assign_to_execution_agent, assign_to_validation_agent],
-    prompt=(
-        "You are a supervisor managing three agents:\n"
-        "- a info_retriever agent. Assign info_retriever-related tasks to this agent\n"
-        "- a execution agent. Assign execution-related tasks to this agent\n"
-        "- a validation agent. Assign validation-related tasks to this agent\n"
-        "After all agents complete their work, transfer to report_agent for final reporting.\n"
-        "Assign work to one agent at a time, do not call agents in parallel.\n"
-        "Do not do any work yourself."
-    ),
+    tools=[assign_to_info_retriever_agent_with_task_description, assign_to_execution_agent_with_task_description, assign_to_validation_agent_with_task_description],
+    prompt="""You are a Domain Supervisor Agent orchestrating ticket resolution through three specialized agents:
+
+AGENTS:
+- Information Retrieval Agent: Gathers historical tickets and knowledge base information
+- Execution Agent: Implements resolution steps (INSERT, UPDATE, DELETE, CONFIGURE actions)  
+- Validation Agent: Verifies resolution success (VERIFY actions) and validates implementations
+
+WORKFLOW:
+1. Analyze the reasoning output: solution_steps, action_types, complexity_level, confidence_score
+2. Assign tasks strategically:
+   - Info Retrieval: For complex tickets needing historical context or similar cases
+   - Execution: For implementation steps with action_types INSERT/UPDATE/DELETE/CONFIGURE
+   - Validation: For VERIFY action_types and final quality checks
+3. Work sequentially - one agent at a time, never parallel
+4. Provide relevant reasoning step details when assigning tasks
+5. After all agents complete, transfer to report_agent
+
+Example: For VERIFY→INSERT→VERIFY steps:
+1. Assign initial VERIFY to Execution Agent
+2. Assign INSERT to Execution Agent  
+3. Assign final VERIFY to Validation Agent
+
+Do not perform any work yourself - only coordinate and assign tasks.""",
     name="Domain Supervisor Agent",
 )
