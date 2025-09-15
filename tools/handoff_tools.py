@@ -1,28 +1,27 @@
-from langchain_core.tools import tool
-from langgraph.types import Command
+from typing import Annotated
+from langchain_core.tools import tool, InjectedToolCallId
+from langgraph.types import Command, Send
+from langgraph.prebuilt import InjectedState
 from models.data_models import MessagesState
+from config.constants import INFO_RETRIEVER_AGENT, EXECUTION_AGENT, VALIDATION_AGENT, REPORT_AGENT
+
+
+def sanitize_tool_name(agent_name: str) -> str:
+    """Convert agent name to valid tool name format (only letters, numbers, underscores, hyphens)"""
+    # Replace spaces with underscores and remove other invalid characters
+    sanitized = agent_name.replace(" ", "_").replace(".", "_")
+    # Keep only alphanumeric characters, underscores, and hyphens
+    sanitized = "".join(c for c in sanitized if c.isalnum() or c in "_-")
+    return sanitized
 
 
 def create_handoff_tool(*, agent_name: str, description: str | None = None):
-    name = f"transfer_to_{agent_name}"
+    name = f"transfer_to_{sanitize_tool_name(agent_name)}"
     description = description or f"Ask {agent_name} for help."
 
     @tool(name, description=description)
-    def handoff_tool(
-        state: MessagesState,
-        tool_call_id: str,
-    ) -> Command:
-        tool_message = {
-            "role": "tool",
-            "content": f"Successfully transferred to {agent_name}",
-            "name": name,
-            "tool_call_id": tool_call_id,
-        }
-        return Command(
-            goto=agent_name,  
-            update={**state, "messages": state["messages"] + [tool_message]},  
-            graph=Command.PARENT,  
-        )
+    def handoff_tool() -> str:
+        return f"Task assigned to {agent_name}. Proceeding with workflow."
 
     return handoff_tool
 
@@ -30,7 +29,7 @@ def create_handoff_tool(*, agent_name: str, description: str | None = None):
 def create_task_description_handoff_tool(
     *, agent_name: str, description: str | None = None
 ):
-    name = f"transfer_to_{agent_name}"
+    name = f"transfer_to_{sanitize_tool_name(agent_name)}"
     description = description or f"Ask {agent_name} for help."
 
     @tool(name, description=description)
@@ -44,7 +43,16 @@ def create_task_description_handoff_tool(
         state: Annotated[MessagesState, InjectedState],
     ) -> Command:
         task_description_message = {"role": "user", "content": task_description}
-        agent_input = {**state, "messages": [task_description_message]}
+        
+        # Ensure we have all the required state fields with proper defaults
+        agent_input = {
+            "messages": [task_description_message],
+            "query_refinement_output": state.get("query_refinement_output"),
+            "input_ticket": state.get("input_ticket"), 
+            "ticket_refinement_output": state.get("ticket_refinement_output"),
+            "reasoning_output": state.get("reasoning_output")
+        }
+        
         return Command(
             goto=[Send(agent_name, agent_input)],
             graph=Command.PARENT,
@@ -54,32 +62,42 @@ def create_task_description_handoff_tool(
 
 # Create task description handoff tools
 assign_to_info_retriever_agent_with_task_description = create_task_description_handoff_tool(
-    agent_name="MM Information Retrieval Agent",
+    agent_name=INFO_RETRIEVER_AGENT,
     description="Assign task to a researcher agent.",
 )
 
 assign_to_execution_agent_with_task_description = create_task_description_handoff_tool(
-    agent_name="MM Execution Agent",
-    description="Assign task to a math agent.",
+    agent_name=EXECUTION_AGENT,
+    description="Assign task to an execution agent.",
 )
 
 assign_to_validation_agent_with_task_description = create_task_description_handoff_tool(
-    agent_name="MM Validation Agent",
+    agent_name=VALIDATION_AGENT,
     description="Assign task to a validation agent.",
+)
+
+assign_to_report_agent_with_task_description = create_task_description_handoff_tool(
+    agent_name=REPORT_AGENT,
+    description="Assign task to generate final report and complete the workflow.",
 )
 
 # Create handoff tools
 assign_to_info_retriever_agent_with_handoff = create_handoff_tool(
-    agent_name="MM Information Retrieval Agent",
+    agent_name=INFO_RETRIEVER_AGENT,
     description="Assign task to a researcher agent.",
 )
 
-assign_to_execution_agent = create_handoff_tool(
-    agent_name="MM Execution Agent",
-    description="Assign task to a math agent.",
+assign_to_execution_agent_with_handoff = create_handoff_tool(
+    agent_name=EXECUTION_AGENT,
+    description="Assign task to an execution agent.",
 )
 
-assign_to_validation_agent = create_handoff_tool(
-    agent_name="MM Validation Agent",
+assign_to_validation_agent_with_handoff = create_handoff_tool(
+    agent_name=VALIDATION_AGENT,
     description="Assign task to a validation agent.",
+)
+
+assign_to_report_agent_with_handoff = create_handoff_tool(
+    agent_name=REPORT_AGENT,
+    description="Assign task to generate final report and complete the workflow.",
 )

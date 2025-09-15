@@ -19,17 +19,13 @@ Output format (JSON):
             "details": "specific parameters, values, conditions, or commands"
         }
     ],
-    "complexity_level": "Simple|Moderate|Complex",
-    "estimated_time": "time estimate for complete resolution",
     "confidence_score": 0.0-1.0
 }
 
 Action Types Guidelines:
 - INSERT: Add missing data, create new records, insert rows
 - UPDATE: Modify existing values, change configurations, update records
-- DELETE: Remove incorrect/duplicate data, clean up records
 - VERIFY: Check data integrity, validate existence, confirm status
-- CONFIGURE: Adjust system settings, permissions, access controls
 
 Complexity Levels:
 - Simple: Single table operations, straightforward data fixes (1-2 steps)

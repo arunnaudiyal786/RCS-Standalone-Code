@@ -7,6 +7,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 from models.data_models import MessagesState, QueryRefinementOutput, InputTicket, TicketRefinementOutput, ReasoningOutput, ReasoningStep
 from config.settings import OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE, OPENAI_MAX_TOKENS
+from config.constants import REASONING_AGENT
 
 
 def pattern_analysis(state: MessagesState):
@@ -231,7 +232,7 @@ def ticket_refinement_step(state: MessagesState):
     }
 
 
-def query_refinement(state: MessagesState) -> Literal["Ticket Refinement Step", "Reasoning Agent"]:
+def query_refinement(state: MessagesState) -> Literal["Ticket Refinement Step", "Reasoning_Agent"]:
     """Router function that reads routing decision from state"""
     # Check if we have query refinement output in state with routing decision
     if "query_refinement_output" in state and state["query_refinement_output"]:
@@ -241,11 +242,11 @@ def query_refinement(state: MessagesState) -> Literal["Ticket Refinement Step", 
         if next_step == "Refine Query Step":
             return "Ticket Refinement Step"
         elif next_step == "Label Analysis Step":
-            return "Reasoning Agent"  # Skip directly to reasoning since analysis steps are commented out
-        return "Reasoning Agent"  # Default to reasoning agent
+            return REASONING_AGENT  # Skip directly to reasoning since analysis steps are commented out
+        return REASONING_AGENT  # Default to reasoning agent
     
     # Default fallback if no state available
-    return "Reasoning Agent"
+    return REASONING_AGENT
 
 
 def reasoning_agent_node(state: MessagesState):

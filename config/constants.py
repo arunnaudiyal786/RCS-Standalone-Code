@@ -1,10 +1,10 @@
 # Agent names
-INFO_RETRIEVER_AGENT = "MM Information Retrieval Agent"
-EXECUTION_AGENT = "MM Execution Agent"
-VALIDATION_AGENT = "MM Validation Agent"
-REASONING_AGENT = "Reasoning Agent"
-REPORT_AGENT = "MM Report Agent"
-SUPERVISOR_AGENT = "Domain Supervisor Agent"
+INFO_RETRIEVER_AGENT = "MM_Information_Retrieval_Agent"
+EXECUTION_AGENT = "MM_Execution_Agent"
+VALIDATION_AGENT = "MM_Validation_Agent"
+REASONING_AGENT = "Reasoning_Agent"
+REPORT_AGENT = "MM_Report_Agent"
+SUPERVISOR_AGENT = "Domain_Supervisor_Agent"
 
 # Graph nodes
 QUERY_REFINEMENT_CHECK = "Query Refinement Check"

@@ -33,7 +33,7 @@ def main():
     try:
         for chunk in supervisor.stream(
             {"messages": [{"role": "user", "content": "Process the sample ticket"}]},
-            config={"configurable": {"thread_id": "test_session_1"}}
+            config={"configurable": {"thread_id": "test_session_1"}, "recursion_limit": 10}
         ):
             pretty_print_messages(chunk)
             
