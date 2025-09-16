@@ -1,10 +1,10 @@
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from config.settings import OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE, OPENAI_MAX_TOKENS
-from config.constants import INFO_RETRIEVER_AGENT, EXECUTION_AGENT, VALIDATION_AGENT, REASONING_AGENT, REPORT_AGENT, SUPERVISOR_AGENT
-from tools.ticket_tools import retrieve_similar_tickets, execute_resolution_step, validate_resolution, retrieve_table_schema_info
-from tools.handoff_tools import assign_to_info_retriever_agent_with_handoff, assign_to_execution_agent_with_handoff, assign_to_validation_agent_with_handoff, assign_to_report_agent_with_handoff
-from models.data_models import ReasoningOutput, InfoRetrieverOutput, ExecutionOutput, ValidationOutput, ReportOutput, SupervisorOutput
+from config.constants import INFO_RETRIEVER_AGENT, EXECUTION_AGENT, VALIDATION_AGENT, REASONING_AGENT, REPORT_AGENT
+from tools.ticket_tools import retrieve_similar_tickets, execute_resolution_step, validate_resolution, retrieve_table_schema_info, get_table_info
+from tools.handoff_tools import complete_workflow
+from models.data_models import ReasoningOutput, InfoRetrieverOutput, ExecutionOutput, ValidationOutput, ReportOutput
 
 
 def create_info_retriever_agent():
@@ -20,7 +20,7 @@ def create_info_retriever_agent():
             temperature=OPENAI_TEMPERATURE,
             max_tokens=OPENAI_MAX_TOKENS
         ),
-        tools=[retrieve_similar_tickets, retrieve_table_schema_info],
+        tools=[retrieve_similar_tickets, retrieve_table_schema_info, get_table_info],
         prompt=info_retriever_prompt,
         name=INFO_RETRIEVER_AGENT,
         response_format=InfoRetrieverOutput
@@ -100,27 +100,12 @@ def create_report_agent():
             temperature=OPENAI_TEMPERATURE,
             max_tokens=OPENAI_MAX_TOKENS
         ),
-        tools=[],
+        tools=[complete_workflow],
         prompt=report_prompt,
         name=REPORT_AGENT,
         response_format=ReportOutput
     )
 
 
-def create_supervisor_agent():
-    """Create and return a Domain Supervisor agent."""
-    # Load supervisor prompt from file
-    with open('prompts/supervisor_agent.txt', 'r') as f:
-        supervisor_prompt = f.read()
-    
-    return create_react_agent(
-        model=ChatOpenAI(
-            openai_api_key=OPENAI_API_KEY,
-            model=OPENAI_MODEL,
-            temperature=OPENAI_TEMPERATURE
-        ),
-        tools=[assign_to_info_retriever_agent_with_handoff, assign_to_execution_agent_with_handoff, assign_to_validation_agent_with_handoff, assign_to_report_agent_with_handoff],
-        prompt=supervisor_prompt,
-        name=SUPERVISOR_AGENT,
-        response_format=SupervisorOutput
-    )
+
+

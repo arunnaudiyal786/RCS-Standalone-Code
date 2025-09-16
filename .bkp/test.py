@@ -12,7 +12,7 @@ from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from langgraph_supervisor import create_supervisor  # Import create_supervisor
+from langgraph_supervisor import create_supervisor
 
 from dotenv import load_dotenv
 
@@ -324,6 +324,12 @@ def main():
     
     # Verify results again
     verify_results()
+
+    graph_image = supervisor_graph.get_graph().draw_mermaid_png()
+    with open("supervisor_graph.png", "wb") as f:
+        f.write(graph_image)
+
+    print("✅ Test completed successfully")
 
 if __name__ == "__main__":
     main()

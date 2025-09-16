@@ -1,103 +1,70 @@
 from typing import Annotated
 from langchain_core.tools import tool, InjectedToolCallId
-from langgraph.types import Command, Send
+from langgraph.types import Command
 from langgraph.prebuilt import InjectedState
-from models.data_models import MessagesState
+from langgraph.graph import StateGraph, START, MessagesState, END
 from config.constants import INFO_RETRIEVER_AGENT, EXECUTION_AGENT, VALIDATION_AGENT, REPORT_AGENT
 
-
-def sanitize_tool_name(agent_name: str) -> str:
-    """Convert agent name to valid tool name format (only letters, numbers, underscores, hyphens)"""
-    # Replace spaces with underscores and remove other invalid characters
-    sanitized = agent_name.replace(" ", "_").replace(".", "_")
-    # Keep only alphanumeric characters, underscores, and hyphens
-    sanitized = "".join(c for c in sanitized if c.isalnum() or c in "_-")
-    return sanitized
-
-
 def create_handoff_tool(*, agent_name: str, description: str | None = None):
-    name = f"transfer_to_{sanitize_tool_name(agent_name)}"
-    description = description or f"Ask {agent_name} for help."
-
-    @tool(name, description=description)
-    def handoff_tool() -> str:
-        return f"Task assigned to {agent_name}. Proceeding with workflow."
-
-    return handoff_tool
-
-
-def create_task_description_handoff_tool(
-    *, agent_name: str, description: str | None = None
-):
-    name = f"transfer_to_{sanitize_tool_name(agent_name)}"
+    name = f"transfer_to_{agent_name}"
     description = description or f"Ask {agent_name} for help."
 
     @tool(name, description=description)
     def handoff_tool(
-        # this is populated by the supervisor LLM
-        task_description: Annotated[
-            str,
-            "Description of what the next agent should do, including all of the relevant context.",
-        ],
-        # these parameters are ignored by the LLM
         state: Annotated[MessagesState, InjectedState],
+        tool_call_id: Annotated[str, InjectedToolCallId],
     ) -> Command:
-        task_description_message = {"role": "user", "content": task_description}
-        
-        # Ensure we have all the required state fields with proper defaults
-        agent_input = {
-            "messages": [task_description_message],
-            "query_refinement_output": state.get("query_refinement_output"),
-            "input_ticket": state.get("input_ticket"), 
-            "ticket_refinement_output": state.get("ticket_refinement_output"),
-            "reasoning_output": state.get("reasoning_output")
+        tool_message = {
+            "role": "tool",
+            "content": f"Successfully transferred to {agent_name}",
+            "name": name,
+            "tool_call_id": tool_call_id,
         }
-        
         return Command(
-            goto=[Send(agent_name, agent_input)],
-            graph=Command.PARENT,
+            goto=agent_name,  
+            update={**state, "messages": state["messages"] + [tool_message]},  
+            graph=Command.PARENT,  
         )
 
     return handoff_tool
 
-# Create task description handoff tools
-assign_to_info_retriever_agent_with_task_description = create_task_description_handoff_tool(
+
+# Create handoff tools for all specialized agents
+assign_to_info_retriever = create_handoff_tool(
     agent_name=INFO_RETRIEVER_AGENT,
-    description="Assign task to a researcher agent.",
+    description="Assign task to info retriever agent to gather historical tickets and schema info.",
 )
 
-assign_to_execution_agent_with_task_description = create_task_description_handoff_tool(
+assign_to_execution = create_handoff_tool(
     agent_name=EXECUTION_AGENT,
-    description="Assign task to an execution agent.",
+    description="Assign task to execution agent to implement resolution steps.",
 )
 
-assign_to_validation_agent_with_task_description = create_task_description_handoff_tool(
+assign_to_validation = create_handoff_tool(
     agent_name=VALIDATION_AGENT,
-    description="Assign task to a validation agent.",
+    description="Assign task to validation agent to verify resolution success.",
 )
 
-assign_to_report_agent_with_task_description = create_task_description_handoff_tool(
+assign_to_report = create_handoff_tool(
     agent_name=REPORT_AGENT,
-    description="Assign task to generate final report and complete the workflow.",
+    description="Assign task to report agent to generate final resolution report.",
 )
 
-# Create handoff tools
-assign_to_info_retriever_agent_with_handoff = create_handoff_tool(
-    agent_name=INFO_RETRIEVER_AGENT,
-    description="Assign task to a researcher agent.",
-)
 
-assign_to_execution_agent_with_handoff = create_handoff_tool(
-    agent_name=EXECUTION_AGENT,
-    description="Assign task to an execution agent.",
-)
-
-assign_to_validation_agent_with_handoff = create_handoff_tool(
-    agent_name=VALIDATION_AGENT,
-    description="Assign task to a validation agent.",
-)
-
-assign_to_report_agent_with_handoff = create_handoff_tool(
-    agent_name=REPORT_AGENT,
-    description="Assign task to generate final report and complete the workflow.",
-)
+@tool("complete_workflow", description="Complete the workflow and end the ticket resolution process.")
+def complete_workflow(
+    state: Annotated[MessagesState, InjectedState],
+    tool_call_id: Annotated[str, InjectedToolCallId],
+) -> Command:
+    """Complete the workflow after all tasks are finished."""
+    tool_message = {
+        "role": "tool",
+        "content": "Workflow completed successfully. All tasks have been finished.",
+        "name": "complete_workflow",
+        "tool_call_id": tool_call_id,
+    }
+    return Command(
+        goto=END,
+        update={**state, "messages": state["messages"] + [tool_message]},
+        graph=Command.PARENT,
+    )

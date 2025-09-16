@@ -194,7 +194,7 @@ class SupervisorOutput(BaseModel):
     timestamp: str
 
 
-class MessagesState(TypedDict):
+class SolutionState(TypedDict, total=False):
     messages: List[HumanMessage | AIMessage | ToolMessage | SystemMessage]
     query_refinement_output: Optional[QueryRefinementOutput]
     input_ticket: Optional[InputTicket]

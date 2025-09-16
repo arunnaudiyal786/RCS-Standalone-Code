@@ -1,7 +1,10 @@
 from typing import List, Dict
+import csv
+import os
 from langchain_core.tools import tool
 from models.data_models import ValidationResult
 from utils.vector_store import vector_store, table_schema_store
+from utils.helpers import get_data_path
 
 
 @tool
@@ -118,4 +121,105 @@ def retrieve_table_schema_info(step_description: str, target_tables: str = None)
             "step_description": step_description,
             "target_tables": target_tables,
             "relevant_tables": []
+        }
+
+
+@tool
+def get_table_info(table_name: str, column_name: str, search_value: str = None) -> Dict:
+    """
+    Retrieve information from a specific table to check if data already exists.
+    
+    Args:
+        table_name: Name of the table to search (e.g., "member_enrollment", "claims_medical")
+        column_name: Name of the column to search in
+        search_value: Optional value to search for in the specified column
+    
+    Returns:
+        Dict containing information about existing data and whether operation is needed
+    """
+    try:
+        # Construct file path
+        file_path = get_data_path(f"table_data/{table_name}.txt")
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return {
+                "status": "error",
+                "message": f"Table file not found: {table_name}.txt",
+                "table_name": table_name,
+                "column_name": column_name,
+                "search_value": search_value,
+                "data_exists": False,
+                "matching_records": [],
+                "operation_needed": True
+            }
+        
+        # Read and parse the CSV file
+        matching_records = []
+        all_records = []
+        column_index = None
+        
+        with open(file_path, 'r', newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            headers = next(reader, [])
+            
+            # Find column index (case-insensitive)
+            for i, header in enumerate(headers):
+                if header.strip().lower() == column_name.strip().lower():
+                    column_index = i
+                    break
+            
+            if column_index is None:
+                return {
+                    "status": "error",
+                    "message": f"Column '{column_name}' not found in table '{table_name}'",
+                    "table_name": table_name,
+                    "column_name": column_name,
+                    "search_value": search_value,
+                    "available_columns": headers,
+                    "data_exists": False,
+                    "matching_records": [],
+                    "operation_needed": True
+                }
+            
+            # Read all records
+            for row_num, row in enumerate(reader, start=2):  # Start from 2 since headers are row 1
+                if len(row) > column_index:
+                    record = dict(zip(headers, row))
+                    all_records.append(record)
+                    
+                    # If search_value is provided, check for matches
+                    if search_value is not None:
+                        if row[column_index].strip() == str(search_value).strip():
+                            matching_records.append({
+                                "row_number": row_num,
+                                "record": record
+                            })
+        
+        # Determine if operation is needed
+        data_exists = len(matching_records) > 0 if search_value is not None else len(all_records) > 0
+        operation_needed = not data_exists if search_value is not None else True
+        
+        return {
+            "status": "success",
+            "table_name": table_name,
+            "column_name": column_name,
+            "search_value": search_value,
+            "data_exists": data_exists,
+            "matching_records": matching_records,
+            "total_records": len(all_records),
+            "operation_needed": operation_needed,
+            "message": f"Found {len(matching_records)} matching records" if search_value else f"Table contains {len(all_records)} total records"
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Error reading table data: {str(e)}",
+            "table_name": table_name,
+            "column_name": column_name,
+            "search_value": search_value,
+            "data_exists": False,
+            "matching_records": [],
+            "operation_needed": True
         }

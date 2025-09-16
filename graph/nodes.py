@@ -5,18 +5,18 @@ from datetime import datetime
 from typing import Literal
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_openai import ChatOpenAI
-from models.data_models import MessagesState, QueryRefinementOutput, InputTicket, TicketRefinementOutput, ReasoningOutput, ReasoningStep, InfoRetrieverOutput, ExecutionOutput, ValidationOutput, ReportOutput, SupervisorOutput
+from models.data_models import SolutionState, QueryRefinementOutput, InputTicket, TicketRefinementOutput, ReasoningOutput, ReasoningStep
 from config.settings import OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE, OPENAI_MAX_TOKENS
-from config.constants import REASONING_AGENT, INFO_RETRIEVER_AGENT, EXECUTION_AGENT, VALIDATION_AGENT, REPORT_AGENT, SUPERVISOR_AGENT
-from agents.specialized_agents import create_reasoning_agent, create_info_retriever_agent, create_execution_agent, create_validation_agent, create_report_agent, create_supervisor_agent
+from config.constants import REASONING_AGENT
+from agents.specialized_agents import create_reasoning_agent
 from utils.helpers import get_data_path, get_prompts_path, get_sessions_path, ensure_directory_exists
 
 
-def pattern_analysis(state: MessagesState):
+def pattern_analysis(state: SolutionState):
     return {"messages": [AIMessage(content="Analyzing pattern...")]}
 
 
-def label_analysis(state: MessagesState):
+def label_analysis(state: SolutionState):
     # Get the refined query from state if available
     query_to_analyze = None
     
@@ -59,7 +59,7 @@ def create_session_folder():
     return session_id, str(session_path)
 
 
-def query_refinement_check(state: MessagesState):
+def query_refinement_check(state: SolutionState):
     """Query Refinement Check agent that analyzes ticket completeness"""
     # Create session folder
     session_id, session_path = create_session_folder()
@@ -159,7 +159,7 @@ def query_refinement_check(state: MessagesState):
     }
 
 
-def ticket_refinement_step(state: MessagesState):
+def ticket_refinement_step(state: SolutionState):
     """Ticket Refinement agent that improves incomplete ticket descriptions"""
     # Get the input ticket from state
     if "input_ticket" not in state or not state["input_ticket"]:
@@ -237,7 +237,7 @@ def ticket_refinement_step(state: MessagesState):
     }
 
 
-def query_refinement(state: MessagesState) -> Literal["Ticket Refinement Step", "Reasoning_Agent"]:
+def query_refinement(state: SolutionState) -> Literal["Ticket Refinement Step", "Reasoning_Agent"]:
     """Router function that reads routing decision from state"""
     # Check if we have query refinement output in state with routing decision
     if "query_refinement_output" in state and state["query_refinement_output"]:
@@ -254,7 +254,7 @@ def query_refinement(state: MessagesState) -> Literal["Ticket Refinement Step", 
     return REASONING_AGENT
 
 
-def reasoning_agent_node(state: MessagesState):
+def reasoning_agent_node(state: SolutionState):
     """Reasoning Agent node that creates step-by-step solution plans"""
     # Determine input ticket - priority: refined > original > sample
     ticket_to_analyze = None
@@ -354,397 +354,5 @@ def reasoning_agent_node(state: MessagesState):
         }
 
 
-def info_retriever_agent_node(state: MessagesState):
-    """Information Retrieval Agent node that gathers historical tickets and schema info"""
-    # Determine session_id from state
-    session_id = "unknown"
-    if "reasoning_output" in state and state["reasoning_output"]:
-        session_id = state["reasoning_output"].session_id
-    elif "query_refinement_output" in state and state["query_refinement_output"]:
-        session_id = state["query_refinement_output"].session_id
-    else:
-        session_id = f"fallback_{datetime.now().strftime('%m%d%Y_%H%M')}"
-    
-    # Get task details from reasoning output
-    task_details = "Retrieve relevant information for ticket resolution"
-    if "reasoning_output" in state and state["reasoning_output"]:
-        reasoning_output = state["reasoning_output"]
-        task_details = f"Retrieve information for: {reasoning_output.ticket_summary}. Steps: {[step.description for step in reasoning_output.solution_steps]}"
-    
-    # Create the info retriever agent
-    info_retriever_agent = create_info_retriever_agent()
-    
-    # Create input message
-    input_message = f"Task: {task_details}"
-    
-    # Get response from agent
-    response = info_retriever_agent.invoke({"messages": [HumanMessage(content=input_message)]})
-    
-    # Extract AI message content
-    ai_messages = [msg for msg in response["messages"] if isinstance(msg, AIMessage)]
-    agent_response_content = ai_messages[-1].content if ai_messages else "No response from info retriever agent"
-    
-    # Get structured response
-    try:
-        if "structured_response" in response and response["structured_response"]:
-            info_output = response["structured_response"]
-            info_output.session_id = session_id
-            info_output.timestamp = datetime.now().isoformat()
-            
-            # Save to session folder
-            try:
-                session_path = get_sessions_path(session_id)
-                agent_folder = session_path / "info_retriever_agent"
-                ensure_directory_exists(agent_folder)
-                
-                output_file = agent_folder / "output.json"
-                with open(output_file, 'w') as f:
-                    json.dump(info_output.model_dump(), f, indent=2)
-            except Exception as e:
-                print(f"Warning: Could not save info retriever output: {e}")
-            
-            return {
-                "messages": state["messages"] + [AIMessage(content=agent_response_content)],
-                "info_retriever_output": info_output
-            }
-        else:
-            raise ValueError("No structured response found in agent output")
-            
-    except Exception as e:
-        print(f"Warning: Could not get structured response from info retriever agent: {e}")
-        # Create fallback output
-        fallback_output = InfoRetrieverOutput(
-            similar_tickets=[],
-            table_schemas=[],
-            analysis_summary=f"Failed to process info retrieval: {str(e)}",
-            recommendations=["Review agent configuration"],
-            confidence_score=0.0,
-            session_id=session_id,
-            timestamp=datetime.now().isoformat()
-        )
-        
-        return {
-            "messages": state["messages"] + [AIMessage(content=agent_response_content)],
-            "info_retriever_output": fallback_output
-        }
 
 
-def execution_agent_node(state: MessagesState):
-    """Execution Agent node that implements resolution steps"""
-    # Determine session_id from state
-    session_id = "unknown"
-    if "reasoning_output" in state and state["reasoning_output"]:
-        session_id = state["reasoning_output"].session_id
-    elif "query_refinement_output" in state and state["query_refinement_output"]:
-        session_id = state["query_refinement_output"].session_id
-    else:
-        session_id = f"fallback_{datetime.now().strftime('%m%d%Y_%H%M')}"
-    
-    # Get execution steps from reasoning output
-    execution_details = "Execute resolution steps"
-    if "reasoning_output" in state and state["reasoning_output"]:
-        reasoning_output = state["reasoning_output"]
-        execution_steps = [step for step in reasoning_output.solution_steps if step.action_type in ["INSERT", "UPDATE", "DELETE", "CONFIGURE"]]
-        execution_details = f"Execute steps: {[f'{step.step_number}: {step.description}' for step in execution_steps]}"
-    
-    # Create the execution agent
-    execution_agent = create_execution_agent()
-    
-    # Create input message
-    input_message = f"Execute the following: {execution_details}"
-    
-    # Get response from agent
-    response = execution_agent.invoke({"messages": [HumanMessage(content=input_message)]})
-    
-    # Extract AI message content
-    ai_messages = [msg for msg in response["messages"] if isinstance(msg, AIMessage)]
-    agent_response_content = ai_messages[-1].content if ai_messages else "No response from execution agent"
-    
-    # Get structured response
-    try:
-        if "structured_response" in response and response["structured_response"]:
-            execution_output = response["structured_response"]
-            execution_output.session_id = session_id
-            execution_output.timestamp = datetime.now().isoformat()
-            
-            # Save to session folder
-            try:
-                session_path = get_sessions_path(session_id)
-                agent_folder = session_path / "execution_agent"
-                ensure_directory_exists(agent_folder)
-                
-                output_file = agent_folder / "output.json"
-                with open(output_file, 'w') as f:
-                    json.dump(execution_output.model_dump(), f, indent=2)
-            except Exception as e:
-                print(f"Warning: Could not save execution output: {e}")
-            
-            return {
-                "messages": state["messages"] + [AIMessage(content=agent_response_content)],
-                "execution_output": execution_output
-            }
-        else:
-            raise ValueError("No structured response found in agent output")
-            
-    except Exception as e:
-        print(f"Warning: Could not get structured response from execution agent: {e}")
-        # Create fallback output
-        fallback_output = ExecutionOutput(
-            executed_steps=[],
-            overall_status="FAILED",
-            success_count=0,
-            failure_count=1,
-            execution_summary=f"Failed to process execution: {str(e)}",
-            session_id=session_id,
-            timestamp=datetime.now().isoformat()
-        )
-        
-        return {
-            "messages": state["messages"] + [AIMessage(content=agent_response_content)],
-            "execution_output": fallback_output
-        }
-
-
-def validation_agent_node(state: MessagesState):
-    """Validation Agent node that verifies resolution success"""
-    # Determine session_id from state
-    session_id = "unknown"
-    if "reasoning_output" in state and state["reasoning_output"]:
-        session_id = state["reasoning_output"].session_id
-    elif "query_refinement_output" in state and state["query_refinement_output"]:
-        session_id = state["query_refinement_output"].session_id
-    else:
-        session_id = f"fallback_{datetime.now().strftime('%m%d%Y_%H%M')}"
-    
-    # Get validation context from previous steps
-    validation_context = "Validate resolution success"
-    if "execution_output" in state and state["execution_output"]:
-        execution_output = state["execution_output"]
-        validation_context = f"Validate execution results: {execution_output.execution_summary}. Steps executed: {len(execution_output.executed_steps)}"
-    elif "reasoning_output" in state and state["reasoning_output"]:
-        reasoning_output = state["reasoning_output"]
-        verify_steps = [step for step in reasoning_output.solution_steps if step.action_type == "VERIFY"]
-        validation_context = f"Validate steps: {[f'{step.step_number}: {step.description}' for step in verify_steps]}"
-    
-    # Create the validation agent
-    validation_agent = create_validation_agent()
-    
-    # Create input message
-    input_message = f"Validate the following: {validation_context}"
-    
-    # Get response from agent
-    response = validation_agent.invoke({"messages": [HumanMessage(content=input_message)]})
-    
-    # Extract AI message content
-    ai_messages = [msg for msg in response["messages"] if isinstance(msg, AIMessage)]
-    agent_response_content = ai_messages[-1].content if ai_messages else "No response from validation agent"
-    
-    # Get structured response
-    try:
-        if "structured_response" in response and response["structured_response"]:
-            validation_output = response["structured_response"]
-            validation_output.session_id = session_id
-            validation_output.timestamp = datetime.now().isoformat()
-            
-            # Save to session folder
-            try:
-                session_path = get_sessions_path(session_id)
-                agent_folder = session_path / "validation_agent"
-                ensure_directory_exists(agent_folder)
-                
-                output_file = agent_folder / "output.json"
-                with open(output_file, 'w') as f:
-                    json.dump(validation_output.model_dump(), f, indent=2)
-            except Exception as e:
-                print(f"Warning: Could not save validation output: {e}")
-            
-            return {
-                "messages": state["messages"] + [AIMessage(content=agent_response_content)],
-                "validation_output": validation_output
-            }
-        else:
-            raise ValueError("No structured response found in agent output")
-            
-    except Exception as e:
-        print(f"Warning: Could not get structured response from validation agent: {e}")
-        # Create fallback output
-        fallback_output = ValidationOutput(
-            is_resolution_successful=False,
-            confidence_score=0.0,
-            issues_found=[],
-            validation_summary=f"Failed to process validation: {str(e)}",
-            recommendations=["Review validation agent configuration"],
-            next_steps=["Debug validation process"],
-            session_id=session_id,
-            timestamp=datetime.now().isoformat()
-        )
-        
-        return {
-            "messages": state["messages"] + [AIMessage(content=agent_response_content)],
-            "validation_output": fallback_output
-        }
-
-
-def report_agent_node(state: MessagesState):
-    """Report Agent node that generates final resolution report"""
-    # Determine session_id from state
-    session_id = "unknown"
-    if "reasoning_output" in state and state["reasoning_output"]:
-        session_id = state["reasoning_output"].session_id
-    elif "query_refinement_output" in state and state["query_refinement_output"]:
-        session_id = state["query_refinement_output"].session_id
-    else:
-        session_id = f"fallback_{datetime.now().strftime('%m%d%Y_%H%M')}"
-    
-    # Gather information from all previous agents
-    report_context = "Generate final resolution report"
-    ticket_id = f"ticket_{session_id}"
-    
-    if "reasoning_output" in state and state["reasoning_output"]:
-        reasoning_output = state["reasoning_output"]
-        report_context += f". Ticket: {reasoning_output.ticket_summary}"
-        
-    if "execution_output" in state and state["execution_output"]:
-        execution_output = state["execution_output"]
-        report_context += f". Execution status: {execution_output.overall_status}"
-        
-    if "validation_output" in state and state["validation_output"]:
-        validation_output = state["validation_output"]
-        report_context += f". Validation result: {'SUCCESS' if validation_output.is_resolution_successful else 'FAILED'}"
-    
-    # Create the report agent
-    report_agent = create_report_agent()
-    
-    # Create input message
-    input_message = f"Generate report for: {report_context}"
-    
-    # Get response from agent
-    response = report_agent.invoke({"messages": [HumanMessage(content=input_message)]})
-    
-    # Extract AI message content
-    ai_messages = [msg for msg in response["messages"] if isinstance(msg, AIMessage)]
-    agent_response_content = ai_messages[-1].content if ai_messages else "No response from report agent"
-    
-    # Get structured response
-    try:
-        if "structured_response" in response and response["structured_response"]:
-            report_output = response["structured_response"]
-            report_output.session_id = session_id
-            report_output.timestamp = datetime.now().isoformat()
-            report_output.ticket_id = ticket_id
-            
-            # Save to session folder
-            try:
-                session_path = get_sessions_path(session_id)
-                agent_folder = session_path / "report_agent"
-                ensure_directory_exists(agent_folder)
-                
-                output_file = agent_folder / "output.json"
-                with open(output_file, 'w') as f:
-                    json.dump(report_output.model_dump(), f, indent=2)
-            except Exception as e:
-                print(f"Warning: Could not save report output: {e}")
-            
-            return {
-                "messages": state["messages"] + [AIMessage(content=agent_response_content)],
-                "report_output": report_output
-            }
-        else:
-            raise ValueError("No structured response found in agent output")
-            
-    except Exception as e:
-        print(f"Warning: Could not get structured response from report agent: {e}")
-        # Create fallback output
-        fallback_output = ReportOutput(
-            ticket_id=ticket_id,
-            resolution_status="FAILED",
-            resolution_summary=f"Failed to generate report: {str(e)}",
-            steps_taken=["Report generation attempted"],
-            time_to_resolution="Unknown",
-            confidence_score=0.0,
-            lessons_learned=["Report agent needs configuration review"],
-            follow_up_actions=["Debug report generation process"],
-            session_id=session_id,
-            timestamp=datetime.now().isoformat()
-        )
-        
-        return {
-            "messages": state["messages"] + [AIMessage(content=agent_response_content)],
-            "report_output": fallback_output
-        }
-
-
-def supervisor_agent_node(state: MessagesState):
-    """Supervisor Agent node that orchestrates workflow and task assignments"""
-    # Determine session_id from state
-    session_id = "unknown"
-    if "reasoning_output" in state and state["reasoning_output"]:
-        session_id = state["reasoning_output"].session_id
-    elif "query_refinement_output" in state and state["query_refinement_output"]:
-        session_id = state["query_refinement_output"].session_id
-    else:
-        session_id = f"fallback_{datetime.now().strftime('%m%d%Y_%H%M')}"
-    
-    # Gather workflow context
-    workflow_context = "Orchestrate ticket resolution workflow"
-    if "reasoning_output" in state and state["reasoning_output"]:
-        reasoning_output = state["reasoning_output"]
-        workflow_context = f"Coordinate resolution for: {reasoning_output.ticket_summary}. Available steps: {[f'{step.step_number}: {step.action_type}' for step in reasoning_output.solution_steps]}"
-    
-    # Create the supervisor agent
-    supervisor_agent = create_supervisor_agent()
-    
-    # Create input message
-    input_message = f"Coordinate workflow: {workflow_context}"
-    
-    # Get response from agent
-    response = supervisor_agent.invoke({"messages": [HumanMessage(content=input_message)]})
-    
-    # Extract AI message content
-    ai_messages = [msg for msg in response["messages"] if isinstance(msg, AIMessage)]
-    agent_response_content = ai_messages[-1].content if ai_messages else "No response from supervisor agent"
-    
-    # Get structured response
-    try:
-        if "structured_response" in response and response["structured_response"]:
-            supervisor_output = response["structured_response"]
-            supervisor_output.session_id = session_id
-            supervisor_output.timestamp = datetime.now().isoformat()
-            
-            # Save to session folder
-            try:
-                session_path = get_sessions_path(session_id)
-                agent_folder = session_path / "supervisor_agent"
-                ensure_directory_exists(agent_folder)
-                
-                output_file = agent_folder / "output.json"
-                with open(output_file, 'w') as f:
-                    json.dump(supervisor_output.model_dump(), f, indent=2)
-            except Exception as e:
-                print(f"Warning: Could not save supervisor output: {e}")
-            
-            return {
-                "messages": state["messages"] + [AIMessage(content=agent_response_content)],
-                "supervisor_output": supervisor_output
-            }
-        else:
-            raise ValueError("No structured response found in agent output")
-            
-    except Exception as e:
-        print(f"Warning: Could not get structured response from supervisor agent: {e}")
-        # Create fallback output
-        fallback_output = SupervisorOutput(
-            workflow_status="FAILED",
-            current_phase="Error",
-            task_assignments=[],
-            completed_agents=[],
-            next_agent=None,
-            coordination_summary=f"Failed to coordinate workflow: {str(e)}",
-            session_id=session_id,
-            timestamp=datetime.now().isoformat()
-        )
-        
-        return {
-            "messages": state["messages"] + [AIMessage(content=agent_response_content)],
-            "supervisor_output": fallback_output
-        }
