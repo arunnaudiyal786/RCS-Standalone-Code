@@ -1,0 +1,86 @@
+TABLE: pharmacy_claims
+
+DESCRIPTION:
+This table stores pharmacy claims data for prescription drug dispensing events. It captures essential information about medications dispensed to plan members, including pharmacy details, drug information, and dispensing dates. This data is critical for pharmacy benefit management, drug utilization review, and medication therapy management programs.
+
+COLUMNS:
+
+1. pharmacy_claim_id (VARCHAR(10), PRIMARY KEY)
+   - Unique identifier for each pharmacy claim/prescription fill
+   - Format: PHM### (e.g., PHM001, PHM002)
+   - Generated automatically when prescription is dispensed and claimed
+   - Used for tracking prescription history, refills, and pharmacy audits
+   - Links to pharmacy payment and adjustment records
+
+2. member_id (VARCHAR(10), FOREIGN KEY, NOT NULL)
+   - References member_enrollment.member_id
+   - Identifies the plan member who received the prescription medication
+   - Used for eligibility verification and pharmacy benefit determination
+   - Links to member's prescription history and drug utilization patterns
+   - Required for prior authorization and step therapy compliance
+
+3. pharmacy_name (VARCHAR(50), NOT NULL)
+   - Name of the pharmacy that dispensed the medication
+   - Includes chain pharmacies (CVS, Walgreens) and independent pharmacies
+   - Used for pharmacy network management and payment processing
+   - Important for member access analysis and pharmacy performance metrics
+   - May include specialty pharmacies for complex medications
+
+4. drug_name (VARCHAR(100), NOT NULL)
+   - Generic or brand name of the dispensed medication with strength
+   - Format: "[Drug Name] [Strength]" (e.g., "Lisinopril 10mg", "Metformin 500mg")
+   - Used for drug utilization review, formulary management, and clinical programs
+   - Critical for drug interaction checking and therapeutic substitution
+   - May include compound medications and specialty drugs
+
+5. dispensed_date (DATE, NOT NULL)
+   - Date when the prescription was filled and dispensed to the member
+   - Format: YYYY-MM-DD
+   - Used for medication compliance monitoring and refill timing
+   - Important for drug utilization review and medication therapy management
+   - Critical for identifying medication gaps and adherence patterns
+
+BUSINESS RULES:
+- Member must have active pharmacy benefits on dispensed date
+- Pharmacy must be in the plan's pharmacy network or covered under out-of-network benefits
+- Drug must be on formulary or have prior authorization approval
+- Quantity limits, age restrictions, and gender restrictions must be validated
+- Drug interaction and duplicate therapy checks must be performed
+
+PHARMACY BENEFIT MANAGEMENT:
+- Formulary tier assignment affects member cost-sharing
+- Prior authorization requirements for certain medications
+- Step therapy protocols for therapeutic classes
+- Quantity limits and days supply restrictions
+- Generic substitution and therapeutic interchange programs
+
+DATA RELATIONSHIPS:
+- Links to member_enrollment via member_id (M:1 relationship)
+- Connected to drug formulary and pricing tables (not shown)
+- Links to pharmacy network and contract tables (not shown)
+- Parent table for prescription detail records (1:M relationship, not shown)
+
+USAGE:
+- Pharmacy claims adjudication and payment
+- Drug utilization review and analysis
+- Medication therapy management programs
+- Prior authorization and step therapy enforcement
+- Pharmacy network management and contracting
+- Clinical program identification (diabetes, hypertension management)
+- Medication adherence monitoring and intervention
+- Drug spend analysis and formulary optimization
+
+CLINICAL APPLICATIONS:
+- Medication compliance tracking
+- Drug interaction and allergy checking
+- Therapeutic duplication identification
+- Clinical outcome measurement
+- Disease state management program support
+- Medication reconciliation for care transitions
+
+REGULATORY COMPLIANCE:
+- Medicare Part D reporting requirements
+- State Medicaid rebate programs
+- FDA adverse event reporting
+- DEA controlled substance monitoring
+- HIPAA privacy and security requirements

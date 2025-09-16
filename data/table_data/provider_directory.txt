@@ -1,0 +1,101 @@
+provider_id,provider_name,specialty,npi_number,practice_location
+PRV001,Dr. Sarah Martinez,Cardiology,1234567890,New York
+PRV002,Dr. Michael Chen,Family Medicine,1234567891,Los Angeles
+PRV003,Dr. Jennifer Davis,Orthopedics,1234567892,Chicago
+PRV004,Dr. Robert Johnson,Pediatrics,1234567893,Houston
+PRV005,Dr. Emily Rodriguez,Dermatology,1234567894,Phoenix
+PRV006,Dr. David Kim,Neurology,1234567895,Philadelphia
+PRV007,Dr. Lisa Thompson,Oncology,1234567896,San Antonio
+PRV008,Dr. James Wilson,Gastroenterology,1234567897,San Diego
+PRV009,Dr. Maria Garcia,Endocrinology,1234567898,Dallas
+PRV010,Dr. Christopher Lee,Psychiatry,1234567899,San Jose
+PRV011,Dr. Amanda Brown,Obstetrics,1234567800,Austin
+PRV012,Dr. Kevin Taylor,Urology,1234567801,Jacksonville
+PRV013,Dr. Rachel White,Radiology,1234567802,Fort Worth
+PRV014,Dr. Daniel Anderson,Emergency Medicine,1234567803,Columbus
+PRV015,Dr. Stephanie Clark,Anesthesiology,1234567804,Charlotte
+PRV016,Dr. Matthew Harris,Ophthalmology,1234567805,San Francisco
+PRV017,Dr. Nicole Martin,Rheumatology,1234567806,Indianapolis
+PRV018,Dr. Brandon Thomas,Pulmonology,1234567807,Seattle
+PRV019,Dr. Jessica Jackson,Infectious Disease,1234567808,Denver
+PRV020,Dr. Ryan Miller,Sports Medicine,1234567809,Washington DC
+PRV021,Dr. Ashley Robinson,Plastic Surgery,1234567810,Boston
+PRV022,Dr. Justin Moore,Pathology,1234567811,Nashville
+PRV023,Dr. Melissa Walker,Nephrology,1234567812,Baltimore
+PRV024,Dr. Adam Hall,Hematology,1234567813,Oklahoma City
+PRV025,Dr. Lauren Allen,Geriatrics,1234567814,Portland
+PRV026,Dr. Sean Young,Otolaryngology,1234567815,Las Vegas
+PRV027,Dr. Brittany King,Allergy,1234567816,Louisville
+PRV028,Dr. Nathan Wright,Physical Medicine,1234567817,Milwaukee
+PRV029,Dr. Christina Lopez,Pain Management,1234567818,Albuquerque
+PRV030,Dr. Jeremy Hill,Vascular Surgery,1234567819,Tucson
+PRV031,Dr. Michelle Scott,Cardiothoracic Surgery,1234567820,Fresno
+PRV032,Dr. Tyler Green,Interventional Radiology,1234567821,Sacramento
+PRV033,Dr. Heather Adams,Nuclear Medicine,1234567822,Long Beach
+PRV034,Dr. Jacob Baker,Colon and Rectal Surgery,1234567823,Kansas City
+PRV035,Dr. Amy Gonzalez,Hand Surgery,1234567824,Mesa
+PRV036,Dr. Brian Nelson,Foot and Ankle Surgery,1234567825,Virginia Beach
+PRV037,Dr. Kelly Carter,Facial Plastic Surgery,1234567826,Atlanta
+PRV038,Dr. Alexander Mitchell,Medical Genetics,1234567827,Colorado Springs
+PRV039,Dr. Angela Perez,Occupational Medicine,1234567828,Raleigh
+PRV040,Dr. Gregory Roberts,Preventive Medicine,1234567829,Omaha
+PRV041,Dr. Sandra Turner,Sleep Medicine,1234567830,Miami
+PRV042,Dr. Jonathan Phillips,Addiction Medicine,1234567831,Oakland
+PRV043,Dr. Kimberly Campbell,Hospice Care,1234567832,Minneapolis
+PRV044,Dr. Mark Parker,Critical Care,1234567833,Tulsa
+PRV045,Dr. Tiffany Evans,Transplant Surgery,1234567834,Cleveland
+PRV046,Dr. Scott Edwards,Bariatric Surgery,1234567835,Wichita
+PRV047,Dr. Vanessa Collins,Maternal-Fetal Medicine,1234567836,Arlington
+PRV048,Dr. Patrick Stewart,Reproductive Endocrinology,1234567837,New Orleans
+PRV049,Dr. Crystal Sanchez,Adolescent Medicine,1234567838,Bakersfield
+PRV050,Dr. Jason Morris,Forensic Pathology,1234567839,Tampa
+PRV051,Dr. Danielle Rogers,Clinical Pharmacology,1234567840,Honolulu
+PRV052,Dr. Stephen Reed,Aerospace Medicine,1234567841,Anaheim
+PRV053,Dr. Monica Cook,Undersea Medicine,1234567842,Santa Ana
+PRV054,Dr. Aaron Bailey,Public Health,1234567843,St. Louis
+PRV055,Dr. Cassandra Rivera,Medical Toxicology,1234567844,Riverside
+PRV056,Dr. Benjamin Cooper,Emergency Medical Services,1234567845,Corpus Christi
+PRV057,Dr. Veronica Richardson,Disaster Medicine,1234567846,Lexington
+PRV058,Dr. Kenneth Cox,Wilderness Medicine,1234567847,Pittsburgh
+PRV059,Dr. Diana Howard,Travel Medicine,1234567848,Anchorage
+PRV060,Dr. Timothy Ward,Correctional Medicine,1234567849,Stockton
+PRV061,Dr. Jacqueline Torres,School Health,1234567850,Cincinnati
+PRV062,Dr. Victor Peterson,Occupational Health,1234567851,St. Paul
+PRV063,Dr. Catherine Gray,Sports Psychiatry,1234567852,Toledo
+PRV064,Dr. Anthony Ramirez,Addiction Psychiatry,1234567853,Newark
+PRV065,Dr. Allison James,Child Psychiatry,1234567854,Greensboro
+PRV066,Dr. Carl Watson,Forensic Psychiatry,1234567855,Plano
+PRV067,Dr. Sara Brooks,Geriatric Psychiatry,1234567856,Henderson
+PRV068,Dr. Frank Kelly,Consultation-Liaison Psychiatry,1234567857,Lincoln
+PRV069,Dr. Kayla Sanders,Psychosomatic Medicine,1234567858,Buffalo
+PRV070,Dr. Edward Price,Brain Injury Medicine,1234567859,Jersey City
+PRV071,Dr. Brooke Bennett,Spinal Cord Injury Medicine,1234567860,Chula Vista
+PRV072,Dr. Raymond Wood,Pediatric Rehabilitation,1234567861,Fort Wayne
+PRV073,Dr. Alexis Barnes,Hospice and Palliative Medicine,1234567862,Orlando
+PRV074,Dr. Peter Ross,Pain Medicine,1234567863,St. Petersburg
+PRV075,Dr. Cynthia Henderson,Interventional Pain Management,1234567864,Chandler
+PRV076,Dr. Jose Coleman,Medical Acupuncture,1234567865,Laredo
+PRV077,Dr. Shannon Jenkins,Integrative Medicine,1234567866,Madison
+PRV078,Dr. Larry Perry,Functional Medicine,1234567867,Lubbock
+PRV079,Dr. Miranda Powell,Anti-Aging Medicine,1234567868,Baton Rouge
+PRV080,Dr. Ralph Long,Regenerative Medicine,1234567869,North Las Vegas
+PRV081,Dr. Natalie Patterson,Precision Medicine,1234567870,Hialeah
+PRV082,Dr. Harold Hughes,Telemedicine,1234567871,Garland
+PRV083,Dr. Paige Flores,Digital Health,1234567872,Glendale
+PRV084,Dr. Arthur Washington,Health Informatics,1234567873,Scottsdale
+PRV085,Dr. Jenna Butler,Clinical Informatics,1234567874,Irving
+PRV086,Dr. Eugene Simmons,Biomedical Informatics,1234567875,Chesapeake
+PRV087,Dr. Lindsey Foster,Population Health,1234567876,Norfolk
+PRV088,Dr. Wayne Gonzales,Quality Improvement,1234567877,Fremont
+PRV089,Dr. Courtney Bryant,Patient Safety,1234567878,Richmond
+PRV090,Dr. Roy Alexander,Healthcare Administration,1234567879,Boise
+PRV091,Dr. Leah Russell,Medical Education,1234567880,San Bernardino
+PRV092,Dr. Terry Griffin,Research Administration,1234567881,Birmingham
+PRV093,Dr. Douglas Diaz,Clinical Research,1234567882,Spokane
+PRV094,Dr. Pamela Hayes,Translational Research,1234567883,Rochester
+PRV095,Dr. Gerald Myers,Pharmaceutical Medicine,1234567884,Des Moines
+PRV096,Dr. Joyce Ford,Regulatory Affairs,1234567885,Modesto
+PRV097,Dr. Philip Hamilton,Drug Development,1234567886,Fayetteville
+PRV098,Dr. Rose Graham,Clinical Trials,1234567887,Tacoma
+PRV099,Dr. Albert Sullivan,Biostatistics,1234567888,Oxnard
+PRV100,Dr. Martha Wallace,Epidemiology,1234567889,Fontana

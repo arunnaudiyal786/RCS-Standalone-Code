@@ -1,0 +1,87 @@
+TABLE: insurance_coverage
+
+DESCRIPTION:
+This table stores insurance coverage details for each enrolled member, including plan type, coverage effective dates, and premium information. It serves as the foundation for benefit determination, eligibility verification, and financial management of member health insurance plans.
+
+COLUMNS:
+
+1. coverage_id (VARCHAR(10), PRIMARY KEY)
+   - Unique identifier for each insurance coverage record
+   - Format: COV### (e.g., COV001, COV002)
+   - Generated automatically upon plan enrollment or plan changes
+   - Used for tracking coverage history and benefit administration
+   - Links to claims processing and eligibility verification systems
+
+2. member_id (VARCHAR(10), FOREIGN KEY, NOT NULL)
+   - References member_enrollment.member_id
+   - Establishes one-to-one relationship between member and their current coverage
+   - Used for eligibility verification during claims processing
+   - Links member demographics to their specific benefit plan
+   - Required for all benefit determinations and cost-sharing calculations
+
+3. plan_type (VARCHAR(20), NOT NULL)
+   - Type and tier of health insurance plan selected by the member
+   - Format: "[Network Type] [Metal Tier]" (e.g., "PPO Gold", "HMO Silver")
+   - Network Types: PPO (Preferred Provider Organization), HMO (Health Maintenance Organization), EPO (Exclusive Provider Organization)
+   - Metal Tiers: Bronze, Silver, Gold, Platinum (indicating actuarial value and cost-sharing levels)
+   - Determines benefit structure, deductibles, copayments, and network access
+
+4. effective_date (DATE, NOT NULL)
+   - Date when the insurance coverage begins for the member
+   - Format: YYYY-MM-DD
+   - Used for eligibility verification and claims processing authorization
+   - Typically aligns with plan year (January 1st) or qualifying life events
+   - Critical for determining coverage periods and benefit eligibility
+
+5. monthly_premium (DECIMAL(8,2), NOT NULL)
+   - Monthly premium amount paid by or on behalf of the member
+   - Represents the cost for insurance coverage before any subsidies or employer contributions
+   - Used for premium billing, collection, and financial reporting
+   - Varies by plan type, geographic location, age, and family composition
+   - Subject to annual adjustments and regulatory approval
+
+BUSINESS RULES:
+- Each member can have only one active coverage record at a time
+- Plan type determines network restrictions and benefit structures
+- Premium amounts must align with filed rates and regulatory approval
+- Coverage effective date determines eligibility for services and claims
+- Plan changes require new coverage records with appropriate effective dates
+
+PLAN TYPE CHARACTERISTICS:
+- PPO Plans: Greater provider choice, higher premiums, out-of-network coverage
+- HMO Plans: Lower premiums, primary care physician required, network restrictions
+- EPO Plans: No primary care physician required, network-only coverage
+- Bronze: 60% actuarial value, lowest premiums, highest deductibles
+- Silver: 70% actuarial value, moderate premiums and deductibles
+- Gold: 80% actuarial value, higher premiums, lower deductibles
+- Platinum: 90% actuarial value, highest premiums, lowest deductibles
+
+DATA RELATIONSHIPS:
+- Links to member_enrollment via member_id (1:1 relationship)
+- Connected to benefit plan design tables (not shown)
+- Links to premium billing and payment tables (not shown)
+- References provider network and contract tables (not shown)
+
+USAGE:
+- Eligibility verification for medical and pharmacy claims
+- Benefit determination and cost-sharing calculations
+- Premium billing and collection processing
+- Network access validation and provider directory filtering
+- Financial reporting and regulatory compliance
+- Member services and plan administration
+- Actuarial analysis and rate setting
+- Regulatory reporting for health insurance marketplaces
+
+REGULATORY COMPLIANCE:
+- Affordable Care Act (ACA) reporting requirements
+- State insurance department rate filing compliance
+- CMS Medicare Advantage and Part D reporting
+- NAIC data collection and reporting standards
+- Health Insurance Marketplace integration
+
+FINANCIAL IMPACT:
+- Premium revenue recognition and collection
+- Medical loss ratio calculations
+- Risk adjustment and reinsurance programs
+- Financial reserves and solvency requirements
+- Actuarial reporting and rate justification

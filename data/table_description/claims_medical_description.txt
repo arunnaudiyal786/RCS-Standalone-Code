@@ -1,0 +1,78 @@
+TABLE: claims_medical
+
+DESCRIPTION:
+This table stores medical claims submitted by healthcare providers for services rendered to plan members. It represents the core transactional data for healthcare service billing, containing essential information for claims processing, adjudication, and payment. Each record represents a single claim submission with associated financial and service details.
+
+COLUMNS:
+
+1. claim_id (VARCHAR(10), PRIMARY KEY)
+   - Unique identifier for each medical claim submission
+   - Format: CLM### (e.g., CLM001, CLM002)
+   - Generated automatically upon claim receipt
+   - Used for claim tracking, appeals, and audit trails
+   - References all related claim line items and adjustments
+
+2. member_id (VARCHAR(10), FOREIGN KEY, NOT NULL)
+   - References member_enrollment.member_id
+   - Identifies the plan member who received the medical services
+   - Used for eligibility verification and benefit determination
+   - Links claims to member coverage and utilization history
+   - Required for all claim processing and payment authorization
+
+3. provider_id (VARCHAR(10), FOREIGN KEY, NOT NULL)
+   - References provider_directory.provider_id
+   - Identifies the healthcare provider who rendered the services
+   - Used for provider validation, network status verification, and payment
+   - Links to provider contracts, fee schedules, and quality metrics
+   - Required for claims adjudication and provider payment processing
+
+4. service_date (DATE, NOT NULL)
+   - Date when the medical service was provided to the member
+   - Format: YYYY-MM-DD
+   - Used for timely filing validation and benefit period determination
+   - Critical for coordination of benefits and medical necessity review
+   - Must fall within member's coverage period for claim eligibility
+
+5. claim_amount (DECIMAL(10,2), NOT NULL)
+   - Total dollar amount billed by the provider for the medical services
+   - Represents the provider's charge before any adjustments or payments
+   - Used for financial reporting, utilization analysis, and payment calculation
+   - Subject to contract negotiations, fee schedules, and benefit limits
+   - May be adjusted during claims processing based on coverage rules
+
+BUSINESS RULES:
+- Service date must be within member's active coverage period
+- Provider must be in-network or out-of-network benefits must apply
+- Claim amount must be positive and within reasonable fee ranges
+- Claims must be submitted within timely filing limits (typically 90-365 days)
+- Duplicate claim detection prevents multiple payments for same service
+
+CLAIM PROCESSING WORKFLOW:
+1. Initial claim receipt and validation
+2. Member eligibility verification
+3. Provider network status check
+4. Medical necessity and prior authorization review
+5. Benefit calculation and payment determination
+6. Provider payment and member explanation of benefits
+
+DATA RELATIONSHIPS:
+- Links to member_enrollment via member_id (M:1 relationship)
+- Links to provider_directory via provider_id (M:1 relationship)
+- Parent table for claim line details (1:M relationship, not shown)
+- Connected to payment and adjustment tables (not shown)
+
+USAGE:
+- Claims adjudication and payment processing
+- Member utilization tracking and analysis
+- Provider payment and financial reconciliation
+- Medical management and case management
+- Fraud detection and prevention
+- Financial reporting and actuarial analysis
+- Regulatory compliance and audit support
+
+FINANCIAL IMPACT:
+- Drives medical expense calculations
+- Impacts member benefit utilization
+- Affects provider payment schedules
+- Influences premium rate setting
+- Supports financial reserves and risk management

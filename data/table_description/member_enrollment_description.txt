@@ -1,0 +1,57 @@
+TABLE: member_enrollment
+
+DESCRIPTION:
+This table stores core member enrollment information for healthcare plan participants. It serves as the primary registry for all individuals enrolled in health insurance plans, tracking their basic demographic information and current enrollment status.
+
+COLUMNS:
+
+1. member_id (VARCHAR(10), PRIMARY KEY)
+   - Unique identifier for each enrolled member
+   - Format: MEM### (e.g., MEM001, MEM002)
+   - Used as foreign key reference in other healthcare tables
+   - Generated automatically upon enrollment
+
+2. first_name (VARCHAR(50), NOT NULL)
+   - Member's legal first name as it appears on official documents
+   - Used for member identification and correspondence
+   - Required field for enrollment completion
+   - Validated against government-issued ID
+
+3. last_name (VARCHAR(50), NOT NULL)
+   - Member's legal last name/surname as it appears on official documents
+   - Used for member identification and correspondence
+   - Required field for enrollment completion
+   - Validated against government-issued ID
+
+4. date_of_birth (DATE, NOT NULL)
+   - Member's date of birth in YYYY-MM-DD format
+   - Used for age verification, eligibility determination, and plan pricing
+   - Critical for Medicare/Medicaid eligibility and pediatric care coordination
+   - Verified against official documentation during enrollment
+
+5. enrollment_status (VARCHAR(20), NOT NULL)
+   - Current status of the member's enrollment in the healthcare plan
+   - Valid values: 'Active', 'Inactive', 'Terminated', 'Pending', 'Suspended'
+   - Active: Currently enrolled with full benefits access
+   - Inactive: Temporarily suspended but not terminated
+   - Terminated: Enrollment ended, no benefits access
+   - Updated based on premium payments, employment status, and life events
+
+BUSINESS RULES:
+- Each member must have a unique member_id
+- Enrollment status determines benefit eligibility and claims processing
+- Date of birth is used for age-based plan restrictions and pricing tiers
+- Status changes trigger notifications to providers and claims processing systems
+- Historical enrollment data is maintained for regulatory compliance
+
+DATA RELATIONSHIPS:
+- Referenced by claims_medical.member_id (1:M relationship)
+- Referenced by pharmacy_claims.member_id (1:M relationship)
+- Referenced by insurance_coverage.member_id (1:1 relationship)
+
+USAGE:
+- Member eligibility verification
+- Claims processing authorization
+- Provider directory access control
+- Premium billing and payment tracking
+- Regulatory reporting and compliance

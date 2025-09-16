@@ -1,0 +1,101 @@
+pharmacy_claim_id,member_id,pharmacy_name,drug_name,dispensed_date
+PHM001,MEM001,CVS Pharmacy,Lisinopril 10mg,2024-01-10
+PHM002,MEM002,Walgreens,Metformin 500mg,2024-01-11
+PHM003,MEM003,Rite Aid,Atorvastatin 20mg,2024-01-12
+PHM004,MEM004,Target Pharmacy,Amoxicillin 500mg,2024-01-13
+PHM005,MEM005,Walmart Pharmacy,Ibuprofen 600mg,2024-01-14
+PHM006,MEM006,Costco Pharmacy,Omeprazole 20mg,2024-01-15
+PHM007,MEM007,Safeway Pharmacy,Levothyroxine 50mcg,2024-01-16
+PHM008,MEM008,Kroger Pharmacy,Amlodipine 5mg,2024-01-17
+PHM009,MEM009,Meijer Pharmacy,Sertraline 50mg,2024-01-18
+PHM010,MEM010,H-E-B Pharmacy,Gabapentin 300mg,2024-01-19
+PHM011,MEM011,Publix Pharmacy,Hydrochlorothiazide 25mg,2024-01-20
+PHM012,MEM012,Giant Eagle Pharmacy,Prednisone 10mg,2024-01-21
+PHM013,MEM013,CVS Pharmacy,Losartan 50mg,2024-01-22
+PHM014,MEM014,Walgreens,Azithromycin 250mg,2024-01-23
+PHM015,MEM015,Rite Aid,Pantoprazole 40mg,2024-01-24
+PHM016,MEM016,Target Pharmacy,Cephalexin 500mg,2024-01-25
+PHM017,MEM017,Walmart Pharmacy,Simvastatin 40mg,2024-01-26
+PHM018,MEM018,Costco Pharmacy,Alprazolam 0.5mg,2024-01-27
+PHM019,MEM019,Safeway Pharmacy,Escitalopram 10mg,2024-01-28
+PHM020,MEM020,Kroger Pharmacy,Tramadol 50mg,2024-01-29
+PHM021,MEM021,Meijer Pharmacy,Furosemide 40mg,2024-01-30
+PHM022,MEM022,H-E-B Pharmacy,Clonazepam 1mg,2024-01-31
+PHM023,MEM023,Publix Pharmacy,Meloxicam 15mg,2024-02-01
+PHM024,MEM024,Giant Eagle Pharmacy,Trazodone 50mg,2024-02-02
+PHM025,MEM025,CVS Pharmacy,Metoprolol 50mg,2024-02-03
+PHM026,MEM026,Walgreens,Cyclobenzaprine 10mg,2024-02-04
+PHM027,MEM027,Rite Aid,Montelukast 10mg,2024-02-05
+PHM028,MEM028,Target Pharmacy,Fluoxetine 20mg,2024-02-06
+PHM029,MEM029,Walmart Pharmacy,Warfarin 5mg,2024-02-07
+PHM030,MEM030,Costco Pharmacy,Insulin Glargine,2024-02-08
+PHM031,MEM031,Safeway Pharmacy,Clopidogrel 75mg,2024-02-09
+PHM032,MEM032,Kroger Pharmacy,Venlafaxine 75mg,2024-02-10
+PHM033,MEM033,Meijer Pharmacy,Atenolol 50mg,2024-02-11
+PHM034,MEM034,H-E-B Pharmacy,Zolpidem 10mg,2024-02-12
+PHM035,MEM035,Publix Pharmacy,Oxycodone 5mg,2024-02-13
+PHM036,MEM036,Giant Eagle Pharmacy,Carvedilol 6.25mg,2024-02-14
+PHM037,MEM037,CVS Pharmacy,Duloxetine 60mg,2024-02-15
+PHM038,MEM038,Walgreens,Bupropion 150mg,2024-02-16
+PHM039,MEM039,Rite Aid,Spironolactone 25mg,2024-02-17
+PHM040,MEM040,Target Pharmacy,Rosuvastatin 20mg,2024-02-18
+PHM041,MEM041,Walmart Pharmacy,Doxycycline 100mg,2024-02-19
+PHM042,MEM042,Costco Pharmacy,Levofloxacin 750mg,2024-02-20
+PHM043,MEM043,Safeway Pharmacy,Morphine 30mg,2024-02-21
+PHM044,MEM044,Kroger Pharmacy,Diazepam 5mg,2024-02-22
+PHM045,MEM045,Meijer Pharmacy,Fentanyl 25mcg,2024-02-23
+PHM046,MEM046,H-E-B Pharmacy,Oxycontin 20mg,2024-02-24
+PHM047,MEM047,Publix Pharmacy,Hydrocodone 10mg,2024-02-25
+PHM048,MEM048,Giant Eagle Pharmacy,Clomiphene 50mg,2024-02-26
+PHM049,MEM049,CVS Pharmacy,Dexamethasone 4mg,2024-02-27
+PHM050,MEM050,Walgreens,Cetirizine 10mg,2024-02-28
+PHM051,MEM051,Rite Aid,Albuterol Inhaler,2024-02-29
+PHM052,MEM052,Target Pharmacy,Insulin Aspart,2024-03-01
+PHM053,MEM053,Walmart Pharmacy,Digoxin 0.25mg,2024-03-02
+PHM054,MEM054,Costco Pharmacy,Phenytoin 100mg,2024-03-03
+PHM055,MEM055,Safeway Pharmacy,Warfarin 2mg,2024-03-04
+PHM056,MEM056,Kroger Pharmacy,Carbamazepine 200mg,2024-03-05
+PHM057,MEM057,Meijer Pharmacy,Valproic Acid 500mg,2024-03-06
+PHM058,MEM058,H-E-B Pharmacy,Lamotrigine 100mg,2024-03-07
+PHM059,MEM059,Publix Pharmacy,Levetiracetam 500mg,2024-03-08
+PHM060,MEM060,Giant Eagle Pharmacy,Topiramate 100mg,2024-03-09
+PHM061,MEM061,CVS Pharmacy,Estradiol 2mg,2024-03-10
+PHM062,MEM062,Walgreens,Progesterone 100mg,2024-03-11
+PHM063,MEM063,Rite Aid,Testosterone Gel,2024-03-12
+PHM064,MEM064,Target Pharmacy,Thyroid 60mg,2024-03-13
+PHM065,MEM065,Walmart Pharmacy,Prednisone 20mg,2024-03-14
+PHM066,MEM066,Costco Pharmacy,Methylprednisolone 4mg,2024-03-15
+PHM067,MEM067,Safeway Pharmacy,Dexamethasone 0.5mg,2024-03-16
+PHM068,MEM068,Kroger Pharmacy,Budesonide 3mg,2024-03-17
+PHM069,MEM069,Meijer Pharmacy,Prednisolone 15mg,2024-03-18
+PHM070,MEM070,H-E-B Pharmacy,Hydrocortisone 20mg,2024-03-19
+PHM071,MEM071,Publix Pharmacy,Ciprofloxacin 500mg,2024-03-20
+PHM072,MEM072,Giant Eagle Pharmacy,Clarithromycin 500mg,2024-03-21
+PHM073,MEM073,CVS Pharmacy,Erythromycin 250mg,2024-03-22
+PHM074,MEM074,Walgreens,Clindamycin 300mg,2024-03-23
+PHM075,MEM075,Rite Aid,Vancomycin 125mg,2024-03-24
+PHM076,MEM076,Target Pharmacy,Linezolid 600mg,2024-03-25
+PHM077,MEM077,Walmart Pharmacy,Metronidazole 500mg,2024-03-26
+PHM078,MEM078,Costco Pharmacy,Fluconazole 150mg,2024-03-27
+PHM079,MEM079,Safeway Pharmacy,Itraconazole 100mg,2024-03-28
+PHM080,MEM080,Kroger Pharmacy,Voriconazole 200mg,2024-03-29
+PHM081,MEM081,Meijer Pharmacy,Acyclovir 400mg,2024-03-30
+PHM082,MEM082,H-E-B Pharmacy,Valacyclovir 1000mg,2024-03-31
+PHM083,MEM083,Publix Pharmacy,Oseltamivir 75mg,2024-04-01
+PHM084,MEM084,Giant Eagle Pharmacy,Ritonavir 100mg,2024-04-02
+PHM085,MEM085,CVS Pharmacy,Efavirenz 600mg,2024-04-03
+PHM086,MEM086,Walgreens,Emtricitabine 200mg,2024-04-04
+PHM087,MEM087,Rite Aid,Tenofovir 300mg,2024-04-05
+PHM088,MEM088,Target Pharmacy,Raltegravir 400mg,2024-04-06
+PHM089,MEM089,Walmart Pharmacy,Dolutegravir 50mg,2024-04-07
+PHM090,MEM090,Costco Pharmacy,Elvitegravir 150mg,2024-04-08
+PHM091,MEM091,Safeway Pharmacy,Rilpivirine 25mg,2024-04-09
+PHM092,MEM092,Kroger Pharmacy,Darunavir 800mg,2024-04-10
+PHM093,MEM093,Meijer Pharmacy,Atazanavir 300mg,2024-04-11
+PHM094,MEM094,H-E-B Pharmacy,Lopinavir 200mg,2024-04-12
+PHM095,MEM095,Publix Pharmacy,Saquinavir 500mg,2024-04-13
+PHM096,MEM096,Giant Eagle Pharmacy,Indinavir 400mg,2024-04-14
+PHM097,MEM097,CVS Pharmacy,Nelfinavir 250mg,2024-04-15
+PHM098,MEM098,Walgreens,Fosamprenavir 700mg,2024-04-16
+PHM099,MEM099,Rite Aid,Tipranavir 250mg,2024-04-17
+PHM100,MEM100,Target Pharmacy,Maraviroc 150mg,2024-04-18

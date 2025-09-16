@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from langchain_core.messages import convert_to_messages
 
 
@@ -39,3 +41,32 @@ def pretty_print_messages(update, last_message=False):
         for m in messages:
             pretty_print_message(m, indent=is_subgraph)
         print("\n")
+
+
+def get_project_root():
+    """Get the project root directory"""
+    return Path(__file__).parent.parent
+
+
+def get_data_path(filename=""):
+    """Get path to data directory or specific file in data directory"""
+    return get_project_root() / "data" / filename
+
+
+def get_prompts_path(filename=""):
+    """Get path to prompts directory or specific file in prompts directory"""
+    return get_project_root() / "prompts" / filename
+
+
+def get_sessions_path(session_id=""):
+    """Get path to sessions directory or specific session folder"""
+    sessions_dir = get_project_root() / "sessions"
+    if session_id:
+        return sessions_dir / session_id
+    return sessions_dir
+
+
+def ensure_directory_exists(path):
+    """Ensure a directory exists, create if it doesn't"""
+    Path(path).mkdir(parents=True, exist_ok=True)
+    return path

@@ -5,9 +5,8 @@ langchain_openai
 langgraph
 langgraph-supervisor
 
-trustcall
-yfinance
 python-dotenv
 faiss-cpu
 pydantic
 typing-extensions
+chromadb>=0.4.0
