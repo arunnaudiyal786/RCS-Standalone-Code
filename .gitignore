@@ -183,3 +183,6 @@ tmp/
 
 # Cursor specific
 .cursor/
+CLAUDE.md
+.claude/
+.bkp/
