@@ -1,0 +1,3 @@
+{
+  "ticket_description": "Medical claim CLM101 for member MEM025 treated by provider PRV015 on 2024-05-15 for emergency room visit ($2850.00) was not properly inserted into claims_medical table due to system timeout during batch processing. Member is calling about claim status and provider has not received payment, causing reimbursement delays."
+}

@@ -1,0 +1,3 @@
+{
+  "ticket_description": "Pharmacy claim PHM015 for member MEM015 shows incorrect drug name 'Pantoprazole 40mg' but should be 'Pantoprazole 20mg' based on the prescription and pharmacy verification. The wrong strength is causing incorrect copayment calculation and member is being overcharged at the pharmacy counter."
+}

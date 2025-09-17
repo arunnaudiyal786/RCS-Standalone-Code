@@ -1,0 +1,3 @@
+{
+  "ticket_description": "New member Sarah Williams with DOB 1995-08-14 needs to be enrolled in the system with member_id MEM101. Member has completed enrollment paperwork and premium payment but is missing from member_enrollment table, causing eligibility verification failures at provider locations."
+}
