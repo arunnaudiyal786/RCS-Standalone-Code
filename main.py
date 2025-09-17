@@ -8,7 +8,7 @@ from graph.supervisor_graph import create_supervisor_graph
 from utils.helpers import pretty_print_messages
 
 
-def main():
+def main(ticket_input: str = None):
     # Create the supervisor graph
     supervisor = create_supervisor_graph()
     
@@ -27,12 +27,19 @@ def main():
 
     # Example usage - actually run the workflow
     print("\nMulti-agent system initialized successfully!")
-    print("Processing sample ticket...")
     
-    # Run the workflow with a sample input to test the session storage
+    # Use provided ticket input or default message
+    if ticket_input:
+        message_content = f"Process this ticket: {ticket_input}"
+        print(f"Processing provided ticket: {ticket_input}")
+    else:
+        message_content = "Process the sample ticket"
+        print("Processing sample ticket...")
+    
+    # Run the workflow with ticket input
     try:
         for chunk in supervisor.stream(
-            {"messages": [{"role": "user", "content": "Process the sample ticket"}]},
+            {"messages": [{"role": "user", "content": message_content}]},
             config={"configurable": {"thread_id": "test_session_1"}, "recursion_limit": 50}
         ):
             pretty_print_messages(chunk)

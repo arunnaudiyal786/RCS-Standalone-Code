@@ -64,15 +64,33 @@ def query_refinement_check(state: SolutionState):
     # Create session folder
     session_id, session_path = create_session_folder()
     
-    # Load the sample ticket
-    ticket_data = load_sample_ticket()
-    ticket_description = ticket_data.get("ticket_description", "")
+    # Check for ticket input in messages first, then fallback to sample ticket
+    ticket_description = ""
+    messages = state.get("messages", [])
+    
+    # Look for ticket input in messages
+    for message in messages:
+        if hasattr(message, 'content') and message.content:
+            content = message.content
+            if content.startswith("Process this ticket:"):
+                ticket_description = content.replace("Process this ticket:", "").strip()
+                break
+    
+    # Fallback to sample ticket if no ticket found in messages
+    if not ticket_description:
+        ticket_data = load_sample_ticket()
+        ticket_description = ticket_data.get("ticket_description", "")
     
     # Create immutable InputTicket at the beginning and store in state
+    # Get additional ticket data if available from sample
+    ticket_data = {}
+    if not any(msg.content.startswith("Process this ticket:") for msg in messages if hasattr(msg, 'content')):
+        ticket_data = load_sample_ticket()
+    
     input_ticket = InputTicket(
         ticket_id=f"ticket_{session_id}",
         ticket_description=ticket_description,
-        source="sample_data",
+        source="user_input" if ticket_description != ticket_data.get("ticket_description", "") else "sample_data",
         timestamp=datetime.now().isoformat(),
         priority=ticket_data.get("priority"),
         category=ticket_data.get("category")
@@ -328,7 +346,7 @@ def reasoning_agent_node(state: SolutionState):
         
         reasoning_output = ReasoningOutput(
             ticket_summary=ticket_to_analyze,
-            solution_steps=[fallback_step],
+            solution_step=fallback_step,  # Single step instead of list
             complexity_level="Moderate",
             estimated_time="Unknown",
             confidence_score=0.0,

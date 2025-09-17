@@ -49,7 +49,7 @@ class ReasoningStep(BaseModel):
 class ReasoningOutput(BaseModel):
     """Output model for reasoning agent solution planning"""
     ticket_summary: str
-    solution_steps: List[ReasoningStep]
+    solution_step: ReasoningStep  # Single step instead of multiple steps
     complexity_level: str  # Simple, Moderate, Complex
     estimated_time: str
     confidence_score: float

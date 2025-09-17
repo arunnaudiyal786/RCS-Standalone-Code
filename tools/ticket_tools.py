@@ -14,15 +14,219 @@ def retrieve_similar_tickets(ticket_description: str) -> List[Dict]:
 
 
 @tool
-def execute_resolution_step(step_description: str, step_number: int) -> Dict:
-    """Execute a specific resolution step."""
-    return {
-        "step_number": step_number,
-        "status": "completed",
-        "execution_time": "25 minutes",
-        "output": f"Successfully executed: {step_description}",
-        "next_action": "Proceed to validation"
-    }
+def insert_row_to_text_file(table_name: str, row_data: Dict[str, str]) -> Dict:
+    """
+    Insert a new row into the specified text file.
+    
+    Args:
+        table_name: Name of the table/text file (e.g., "member_enrollment", "claims_medical")
+        row_data: Dictionary containing column names as keys and values to insert
+    
+    Returns:
+        Dict containing operation status, details, and any errors
+    """
+    try:
+        # Construct file path
+        file_path = get_data_path(f"table_data/{table_name}.txt")
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return {
+                "status": "error",
+                "message": f"Table file not found: {table_name}.txt",
+                "table_name": table_name,
+                "operation": "insert",
+                "row_data": row_data,
+                "success": False
+            }
+        
+        # Read existing headers
+        with open(file_path, 'r', newline='', encoding='utf-8') as textfile:
+            reader = csv.reader(textfile)
+            headers = next(reader, [])
+            
+            if not headers:
+                return {
+                    "status": "error",
+                    "message": f"No headers found in table: {table_name}",
+                    "table_name": table_name,
+                    "operation": "insert",
+                    "row_data": row_data,
+                    "success": False
+                }
+        
+        # Validate that all required columns are provided
+        missing_columns = [col for col in headers if col not in row_data]
+        if missing_columns:
+            return {
+                "status": "error",
+                "message": f"Missing required columns: {missing_columns}",
+                "table_name": table_name,
+                "operation": "insert",
+                "row_data": row_data,
+                "expected_columns": headers,
+                "missing_columns": missing_columns,
+                "success": False
+            }
+        
+        # Prepare row data in correct column order
+        ordered_row = [row_data.get(col, '') for col in headers]
+        
+        # Append the new row
+        with open(file_path, 'a', newline='', encoding='utf-8') as textfile:
+            writer = csv.writer(textfile)
+            writer.writerow(ordered_row)
+        
+        return {
+            "status": "success",
+            "message": f"Successfully inserted new row into {table_name}",
+            "table_name": table_name,
+            "operation": "insert",
+            "row_data": row_data,
+            "inserted_row": dict(zip(headers, ordered_row)),
+            "success": True
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Error inserting row into {table_name}: {str(e)}",
+            "table_name": table_name,
+            "operation": "insert",
+            "row_data": row_data,
+            "success": False
+        }
+
+
+@tool
+def update_value_in_text_file(table_name: str, search_column: str, search_value: str, update_column: str, new_value: str) -> Dict:
+    """
+    Update a specific value in the text file based on search criteria.
+    
+    Args:
+        table_name: Name of the table/text file (e.g., "member_enrollment", "claims_medical")
+        search_column: Column name to search in
+        search_value: Value to search for in the search_column
+        update_column: Column name to update
+        new_value: New value to set in the update_column
+    
+    Returns:
+        Dict containing operation status, details, and any errors
+    """
+    try:
+        # Construct file path
+        file_path = get_data_path(f"table_data/{table_name}.txt")
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return {
+                "status": "error",
+                "message": f"Table file not found: {table_name}.txt",
+                "table_name": table_name,
+                "operation": "update",
+                "search_criteria": {"column": search_column, "value": search_value},
+                "update_data": {"column": update_column, "new_value": new_value},
+                "success": False
+            }
+        
+        # Read all data
+        rows = []
+        headers = []
+        updated_rows = []
+        
+        with open(file_path, 'r', newline='', encoding='utf-8') as textfile:
+            reader = csv.reader(textfile)
+            headers = next(reader, [])
+            
+            if not headers:
+                return {
+                    "status": "error",
+                    "message": f"No headers found in table: {table_name}",
+                    "table_name": table_name,
+                    "operation": "update",
+                    "success": False
+                }
+            
+            # Check if columns exist
+            if search_column not in headers:
+                return {
+                    "status": "error",
+                    "message": f"Search column '{search_column}' not found in table '{table_name}'",
+                    "table_name": table_name,
+                    "operation": "update",
+                    "available_columns": headers,
+                    "success": False
+                }
+            
+            if update_column not in headers:
+                return {
+                    "status": "error",
+                    "message": f"Update column '{update_column}' not found in table '{table_name}'",
+                    "table_name": table_name,
+                    "operation": "update",
+                    "available_columns": headers,
+                    "success": False
+                }
+            
+            search_index = headers.index(search_column)
+            update_index = headers.index(update_column)
+            
+            # Read all rows and identify matches
+            for row_num, row in enumerate(reader, start=2):
+                if len(row) > max(search_index, update_index):
+                    if row[search_index].strip() == str(search_value).strip():
+                        old_value = row[update_index]
+                        row[update_index] = str(new_value)
+                        updated_rows.append({
+                            "row_number": row_num,
+                            "record": dict(zip(headers, row)),
+                            "old_value": old_value,
+                            "new_value": new_value
+                        })
+                    rows.append(row)
+                else:
+                    rows.append(row)
+        
+        if not updated_rows:
+            return {
+                "status": "warning",
+                "message": f"No records found matching {search_column}='{search_value}' in {table_name}",
+                "table_name": table_name,
+                "operation": "update",
+                "search_criteria": {"column": search_column, "value": search_value},
+                "update_data": {"column": update_column, "new_value": new_value},
+                "updated_count": 0,
+                "success": False
+            }
+        
+        # Write updated data back to file
+        with open(file_path, 'w', newline='', encoding='utf-8') as textfile:
+            writer = csv.writer(textfile)
+            writer.writerow(headers)
+            writer.writerows(rows)
+        
+        return {
+            "status": "success",
+            "message": f"Successfully updated {len(updated_rows)} record(s) in {table_name}",
+            "table_name": table_name,
+            "operation": "update",
+            "search_criteria": {"column": search_column, "value": search_value},
+            "update_data": {"column": update_column, "new_value": new_value},
+            "updated_count": len(updated_rows),
+            "updated_records": updated_rows,
+            "success": True
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Error updating {table_name}: {str(e)}",
+            "table_name": table_name,
+            "operation": "update",
+            "search_criteria": {"column": search_column, "value": search_value},
+            "update_data": {"column": update_column, "new_value": new_value},
+            "success": False
+        }
 
 
 @tool
@@ -154,13 +358,13 @@ def get_table_info(table_name: str, column_name: str, search_value: str = None) 
                 "operation_needed": True
             }
         
-        # Read and parse the CSV file
+        # Read and parse the text file
         matching_records = []
         all_records = []
         column_index = None
         
-        with open(file_path, 'r', newline='', encoding='utf-8') as csvfile:
-            reader = csv.reader(csvfile)
+        with open(file_path, 'r', newline='', encoding='utf-8') as textfile:
+            reader = csv.reader(textfile)
             headers = next(reader, [])
             
             # Find column index (case-insensitive)
@@ -185,7 +389,7 @@ def get_table_info(table_name: str, column_name: str, search_value: str = None) 
             # Read all records
             for row_num, row in enumerate(reader, start=2):  # Start from 2 since headers are row 1
                 if len(row) > column_index:
-                    record = dict(zip(headers, row))
+                    record = dict(zip(headers, row))  # type: ignore    # type: ignore
                     all_records.append(record)
                     
                     # If search_value is provided, check for matches

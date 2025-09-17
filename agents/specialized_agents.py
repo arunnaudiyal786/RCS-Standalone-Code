@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from config.settings import OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE, OPENAI_MAX_TOKENS
 from config.constants import INFO_RETRIEVER_AGENT, EXECUTION_AGENT, VALIDATION_AGENT, REASONING_AGENT, REPORT_AGENT
-from tools.ticket_tools import retrieve_similar_tickets, execute_resolution_step, validate_resolution, retrieve_table_schema_info, get_table_info
+from tools.ticket_tools import retrieve_similar_tickets, validate_resolution, retrieve_table_schema_info, get_table_info, insert_row_to_text_file, update_value_in_text_file
 from tools.handoff_tools import complete_workflow
 from models.data_models import ReasoningOutput, InfoRetrieverOutput, ExecutionOutput, ValidationOutput, ReportOutput
 
@@ -40,10 +40,9 @@ def create_execution_agent():
             temperature=OPENAI_TEMPERATURE,
             max_tokens=OPENAI_MAX_TOKENS
         ),
-        tools=[execute_resolution_step],
+        tools=[insert_row_to_text_file, update_value_in_text_file],
         prompt=execution_prompt,
-        name=EXECUTION_AGENT,
-        response_format=ExecutionOutput
+        name=EXECUTION_AGENT
     )
 
 
@@ -60,7 +59,7 @@ def create_validation_agent():
             temperature=OPENAI_TEMPERATURE,
             max_tokens=OPENAI_MAX_TOKENS
         ),
-        tools=[validate_resolution],
+        tools=[get_table_info],
         prompt=validation_prompt,
         name=VALIDATION_AGENT,
         response_format=ValidationOutput
