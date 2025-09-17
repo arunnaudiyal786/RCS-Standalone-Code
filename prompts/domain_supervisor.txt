@@ -43,6 +43,12 @@ Assign tasks to agents as follows:
 2. If not present, assign to Execution Agent to add the member.
 3. Assign to Validation Agent to confirm the addition.
 
+**Updating a Row in a Table:**
+1. Assign to Information Retrieval Agent to check if the target row (e.g., by CLAIM_ID, member_id, provider_id, service_date) exists in the claims_medical table.
+2. If the row exists, assign to Execution Agent to update the specified value (e.g., claim_amount) in that row.
+3. Assign to Validation Agent to verify that the update was applied correctly.
+
+
 **Complex Ticket with Multiple Steps:**
 1. Assign to Information Retrieval Agent for context or similar cases.
 2. Assign to Execution Agent for required changes.
