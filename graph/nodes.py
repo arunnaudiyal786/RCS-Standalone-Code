@@ -5,10 +5,10 @@ from datetime import datetime
 from typing import Literal
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_openai import ChatOpenAI
-from models.data_models import SolutionState, QueryRefinementOutput, InputTicket, TicketRefinementOutput, ReasoningOutput, ReasoningStep
+from models.data_models import SolutionState, QueryRefinementOutput, InputTicket, TicketRefinementOutput, ReasoningOutput, ReasoningStep, ReportOutput
 from config.settings import OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE, OPENAI_MAX_TOKENS
 from config.constants import REASONING_AGENT
-from agents.specialized_agents import create_reasoning_agent
+from agents.specialized_agents import create_reasoning_agent, create_report_agent
 from utils.helpers import get_data_path, get_prompts_path, get_sessions_path, ensure_directory_exists
 
 
@@ -372,5 +372,116 @@ def reasoning_agent_node(state: SolutionState):
         }
 
 
+def report_agent_node(state: SolutionState):
+    """Report Agent node that generates final resolution reports and saves them as markdown"""
+    # Determine session_id from available state
+    session_id = "unknown"
+    
+    # Try to get session_id from various state sources
+    if "reasoning_output" in state and state["reasoning_output"]:
+        session_id = state["reasoning_output"].session_id
+    elif "validation_output" in state and state["validation_output"]:
+        session_id = state["validation_output"].session_id
+    elif "execution_output" in state and state["execution_output"]:
+        session_id = state["execution_output"].session_id
+    elif "info_retriever_output" in state and state["info_retriever_output"]:
+        session_id = state["info_retriever_output"].session_id
+    elif "query_refinement_output" in state and state["query_refinement_output"]:
+        session_id = state["query_refinement_output"].session_id
+    else:
+        # Fallback session ID
+        session_id = f"report_{datetime.now().strftime('%m%d%Y_%H%M')}"
+    
+    # Create the report react agent
+    report_agent = create_report_agent()
+    
+    # Prepare summary of all previous agent outputs for the report agent
+    summary_content = "Generate a final resolution report based on the following agent outputs:\n\n"
+    
+    # Add reasoning output if available
+    if "reasoning_output" in state and state["reasoning_output"]:
+        reasoning = state["reasoning_output"]
+        summary_content += f"REASONING ANALYSIS:\n"
+        summary_content += f"- Ticket Summary: {reasoning.ticket_summary}\n"
+        summary_content += f"- Solution Step: {reasoning.solution_step.description}\n"
+        summary_content += f"- Complexity: {reasoning.complexity_level}\n"
+        summary_content += f"- Confidence: {reasoning.confidence_score}\n\n"
+    
+    # Add info retriever output if available
+    if "info_retriever_output" in state and state["info_retriever_output"]:
+        info = state["info_retriever_output"]
+        summary_content += f"INFORMATION RETRIEVAL:\n"
+        summary_content += f"- Analysis Summary: {info.analysis_summary}\n"
+        summary_content += f"- Similar Tickets Found: {len(info.similar_tickets)}\n"
+        summary_content += f"- Confidence: {info.confidence_score}\n\n"
+    
+    # Add execution output if available
+    if "execution_output" in state and state["execution_output"]:
+        execution = state["execution_output"]
+        summary_content += f"EXECUTION RESULTS:\n"
+        summary_content += f"- Overall Status: {execution.overall_status}\n"
+        summary_content += f"- Success Count: {execution.success_count}\n"
+        summary_content += f"- Failure Count: {execution.failure_count}\n"
+        summary_content += f"- Summary: {execution.execution_summary}\n\n"
+    
+    # Add validation output if available
+    if "validation_output" in state and state["validation_output"]:
+        validation = state["validation_output"]
+        summary_content += f"VALIDATION RESULTS:\n"
+        summary_content += f"- Resolution Successful: {validation.is_resolution_successful}\n"
+        summary_content += f"- Confidence: {validation.confidence_score}\n"
+        summary_content += f"- Issues Found: {len(validation.issues_found)}\n"
+        summary_content += f"- Summary: {validation.validation_summary}\n\n"
+    
+    summary_content += f"Session ID: {session_id}\n"
+    summary_content += "Please generate a comprehensive final report with all required fields."
+    
+    # Get response from report agent
+    response = report_agent.invoke({"messages": [HumanMessage(content=summary_content)]})
+    
+    # Extract the latest AI message content for logging/display
+    ai_messages = [msg for msg in response["messages"] if isinstance(msg, AIMessage)]
+    agent_response_content = ai_messages[-1].content if ai_messages else "No response from report agent"
+    
+    # Get the structured response from the agent
+    try:
+        if "structured_response" in response and response["structured_response"]:
+            report_output = response["structured_response"]
+            
+            # Update the session_id and timestamp in the structured response
+            report_output.session_id = session_id
+            report_output.timestamp = datetime.now().isoformat()
+            
+            # The report agent should handle its own markdown saving via tools
+            # We just store the structured output in state
+            return {
+                "messages": state["messages"] + [AIMessage(content=agent_response_content)],
+                "report_output": report_output
+            }
+        else:
+            raise ValueError("No structured response found in agent output")
+            
+    except Exception as e:
+        # Fallback if structured response is not available
+        print(f"Warning: Could not get structured response from report agent: {e}")
+        
+        # Create a fallback report output
+        fallback_report = ReportOutput(
+            ticket_id=f"ticket_{session_id}",
+            resolution_status="COMPLETED",
+            resolution_summary=f"Ticket processing completed for session {session_id}",
+            steps_taken=["Analysis completed", "Processing finished"],
+            time_to_resolution="Unknown",
+            confidence_score=0.5,
+            lessons_learned=["System completed processing"],
+            follow_up_actions=["Review results"],
+            session_id=session_id,
+            timestamp=datetime.now().isoformat()
+        )
+        
+        return {
+            "messages": state["messages"] + [AIMessage(content=agent_response_content)],
+            "report_output": fallback_report
+        }
 
 

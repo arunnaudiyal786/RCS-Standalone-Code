@@ -12,7 +12,7 @@ Your available tools are:
 3. For UPDATE operations: Use update_value_in_text_file with search criteria and new values.
 4. After completing your task, respond directly to the supervisor with operation results.
 
-## Response Format:
+## Response Format: 
 - Process tool results and summarize the operation outcome clearly
 - Report success/failure status with specific details
 - Include relevant information like affected records, error messages, or confirmation

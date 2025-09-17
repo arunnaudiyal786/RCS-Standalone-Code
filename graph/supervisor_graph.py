@@ -6,7 +6,7 @@ from config.settings import OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE, OP
 from config.constants import INFO_RETRIEVER_AGENT, EXECUTION_AGENT, VALIDATION_AGENT, REASONING_AGENT, REPORT_AGENT, SUPERVISOR_AGENT
 from graph.nodes import (
     query_refinement, query_refinement_check, 
-    ticket_refinement_step, reasoning_agent_node
+    ticket_refinement_step, reasoning_agent_node, report_agent_node
 )
 from agents.specialized_agents import (
     create_info_retriever_agent, create_execution_agent, 
@@ -57,7 +57,7 @@ def create_supervisor_graph():
         .add_node(info_retriever_agent)
         .add_node(execution_agent)
         .add_node(validation_agent)
-        .add_node(report_agent, destinations=(END,))
+        .add_node(REPORT_AGENT, report_agent_node)
         .add_edge(START, "Query Refinement Check")
         .add_conditional_edges("Query Refinement Check", query_refinement)
         .add_edge("Ticket Refinement Step", REASONING_AGENT)
@@ -66,6 +66,7 @@ def create_supervisor_graph():
         .add_edge(INFO_RETRIEVER_AGENT, SUPERVISOR_AGENT)
         .add_edge(EXECUTION_AGENT, SUPERVISOR_AGENT)
         .add_edge(VALIDATION_AGENT, SUPERVISOR_AGENT)
+        .add_edge(REPORT_AGENT, END)
         .compile()
     )
     
