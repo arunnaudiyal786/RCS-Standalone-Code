@@ -16,9 +16,24 @@ def save_report_to_markdown(
 ) -> str:
     """Save report output as both JSON and markdown files in the session folder."""
     try:
-        # Parse the report data
+        # Parse the report data with better error handling
         import json
-        report_dict = json.loads(report_data)
+        
+        # Handle different input formats
+        if not report_data or report_data.strip() == "":
+            return "Error saving report: Empty report data provided"
+        
+        # Try to parse as JSON first
+        try:
+            report_dict = json.loads(report_data)
+        except json.JSONDecodeError as e:
+            return f"Error saving report: Invalid JSON format - {str(e)}"
+        
+        # Validate that we have a dictionary
+        if not isinstance(report_dict, dict):
+            return f"Error saving report: Expected JSON object, got {type(report_dict)}"
+        
+        # Create ReportOutput with validation
         report_output = ReportOutput(**report_dict)
         
         session_id = report_output.session_id
@@ -43,6 +58,11 @@ def save_report_to_markdown(
         
         return f"Report saved successfully to {markdown_file}"
         
+    except ValueError as e:
+        # Handle Pydantic validation errors
+        if "validation error" in str(e).lower():
+            return f"Error saving report: Data validation failed - {str(e)}"
+        return f"Error saving report: {str(e)}"
     except Exception as e:
         return f"Error saving report: {str(e)}"
 

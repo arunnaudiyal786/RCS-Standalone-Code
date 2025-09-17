@@ -9,7 +9,34 @@ INSTRUCTIONS:
 
 WORKFLOW:
 1. Generate your structured report response
-2. Call save_report_to_markdown with your report data as JSON string
+2. Call save_report_to_markdown with your report data as a valid JSON string
 3. Call complete_workflow to terminate the workflow
+
+CRITICAL JSON FORMAT REQUIREMENTS:
+When calling save_report_to_markdown, you MUST provide a valid JSON string with ALL required fields:
+- ticket_id: string
+- resolution_status: string (RESOLVED, PARTIALLY_RESOLVED, or FAILED)
+- resolution_summary: string
+- steps_taken: array of strings (must be a list, not a single string)
+- time_to_resolution: string
+- confidence_score: number (0.0 to 1.0)
+- lessons_learned: array of strings (must be a list, not a single string)
+- follow_up_actions: array of strings (must be a list, not a single string)
+- session_id: string
+- timestamp: string (ISO format)
+
+EXAMPLE VALID JSON:
+{
+  "ticket_id": "session_id_here",
+  "resolution_status": "RESOLVED",
+  "resolution_summary": "Description of what was resolved",
+  "steps_taken": ["Step 1", "Step 2", "Step 3"],
+  "time_to_resolution": "Short",
+  "confidence_score": 0.95,
+  "lessons_learned": ["Lesson 1", "Lesson 2"],
+  "follow_up_actions": ["Action 1", "Action 2"],
+  "session_id": "session_id_here",
+  "timestamp": "2023-10-16T12:00:00Z"
+}
 
 CRITICAL: You must save the report as markdown before calling complete_workflow to terminate the workflow.

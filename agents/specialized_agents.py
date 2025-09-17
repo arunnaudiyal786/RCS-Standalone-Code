@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from config.settings import OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE, OPENAI_MAX_TOKENS
 from config.constants import INFO_RETRIEVER_AGENT, EXECUTION_AGENT, VALIDATION_AGENT, REASONING_AGENT, REPORT_AGENT
-from tools.ticket_tools import retrieve_similar_tickets, validate_resolution, retrieve_table_schema_info, get_table_info, insert_row_to_text_file, update_value_in_text_file
+from tools.ticket_tools import retrieve_similar_tickets, validate_resolution, retrieve_table_schema_info, get_table_info, insert_row_to_text_file, update_value_in_text_file, get_table_desc
 from tools.handoff_tools import complete_workflow
 from tools.report_tools import save_report_to_markdown
 from models.data_models import ReasoningOutput, InfoRetrieverOutput, ExecutionOutput, ValidationOutput, ReportOutput
@@ -21,7 +21,7 @@ def create_info_retriever_agent():
             temperature=OPENAI_TEMPERATURE,
             max_tokens=OPENAI_MAX_TOKENS
         ),
-        tools=[retrieve_similar_tickets, retrieve_table_schema_info, get_table_info],
+        tools=[retrieve_similar_tickets, retrieve_table_schema_info, get_table_info, get_table_desc],
         prompt=info_retriever_prompt,
         name=INFO_RETRIEVER_AGENT,
         response_format=InfoRetrieverOutput
