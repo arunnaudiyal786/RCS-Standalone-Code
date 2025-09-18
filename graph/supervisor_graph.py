@@ -44,7 +44,8 @@ def create_supervisor_graph():
         model=llm,
         tools=[assign_to_info_retriever, assign_to_execution, assign_to_validation, assign_to_report, complete_workflow],
         prompt=supervisor_prompt,
-        name=SUPERVISOR_AGENT
+        name=SUPERVISOR_AGENT,
+        # output_mode="full_history"
     )
     
     # Create multi-agent supervisor graph from scratch
