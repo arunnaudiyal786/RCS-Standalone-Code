@@ -1,12 +1,14 @@
-langchain
-langchain-tavily
-langchain_community
-langchain_openai
-langgraph
-langgraph-supervisor
+# Python version: 3.11.12
 
-python-dotenv
-faiss-cpu
-pydantic
-typing-extensions
-chromadb>=0.4.0
+langchain==0.2.17
+# langchain-tavily  # Not installed in current environment
+langchain_community==0.2.19
+langchain_openai==0.1.25
+langgraph==0.3.34
+langgraph-supervisor==0.0.15
+
+python-dotenv==1.1.1
+faiss-cpu==1.12.0
+pydantic==2.11.7
+typing-extensions==4.15.0
+chromadb==0.5.23
