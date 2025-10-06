@@ -2,7 +2,7 @@
 
 langchain==0.3.27
 # langchain-tavily  # Not installed in current environment
-langchain_community==0.3.29
+langchain_community==0.3.30
 langchain_openai==0.3.32
 langgraph==0.6.7
 langgraph-supervisor==0.0.29
@@ -11,4 +11,9 @@ python-dotenv==1.1.1
 faiss-cpu==1.12.0
 pydantic==2.11.7
 typing-extensions==4.15.0
+langfuse>=2.0.0
 # chromadb==0.5.23  # Not installed in current environment
+
+# NeMo Guardrails for PII Detection
+nemoguardrails>=0.16.0
+nest-asyncio>=1.5.6

@@ -1,0 +1,8 @@
+prompts:
+  - task: self_check_input
+    content: |
+      Instruction: {{ user_message }}
+
+      If the text contains any infomration about the name of the individual, return "Yes". Otherwise, return "No".
+
+      Answer [Yes/No]:

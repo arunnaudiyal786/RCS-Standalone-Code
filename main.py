@@ -4,8 +4,13 @@ Main entry point for the LangGraph multi-agent system
 """
 
 import subprocess
+import nest_asyncio
 from graph.supervisor_graph import create_supervisor_graph
 from utils.helpers import pretty_print_messages
+from utils.langfuse_config import get_langfuse_handler
+
+# Apply nest_asyncio for async compatibility
+nest_asyncio.apply()
 
 
 def main(ticket_input: str = None):
@@ -38,12 +43,43 @@ def main(ticket_input: str = None):
     
     # Run the workflow with ticket input
     try:
+        # Create LangFuse handler with session correlation
+        langfuse_handler = get_langfuse_handler(
+            session_id="test_session_1",
+            trace_name="supervisor_workflow_execution"
+        )
+
+        # Build config with LangFuse callbacks
+        config = {
+            "configurable": {"thread_id": "test_session_1"},
+            "recursion_limit": 50
+        }
+
+        # Add callbacks and prompt version tracking metadata if LangFuse is enabled
+        if langfuse_handler:
+            config["callbacks"] = [langfuse_handler]
+            # Add metadata for prompt version tracking
+            config["metadata"] = {
+                "prompt_versions": {
+                    "reasoning_agent": "production",
+                    "supervisor_agent": "production",
+                    "info_retriever_agent": "production",
+                    "execution_agent": "production",
+                    "validation_agent": "production",
+                    "report_agent": "production",
+                    "query_refinement_check": "production",
+                    "ticket_refinement": "production"
+                },
+                "prompt_management_enabled": True
+            }
+            print("LangFuse tracing enabled for this execution with prompt version tracking")
+
         for chunk in supervisor.stream(
             {"messages": [{"role": "user", "content": message_content}]},
-            config={"configurable": {"thread_id": "test_session_1"}, "recursion_limit": 50}
+            config=config
         ):
             pretty_print_messages(chunk)
-            
+
         print("\nWorkflow execution completed. Check the sessions folder for output files.")
         
     except Exception as e:

@@ -5,11 +5,14 @@ from datetime import datetime
 from typing import Literal
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_openai import ChatOpenAI
-from models.data_models import SolutionState, QueryRefinementOutput, InputTicket, TicketRefinementOutput, ReasoningOutput, ReasoningStep, ReportOutput
+from langgraph.graph import END
+from models.data_models import SolutionState, QueryRefinementOutput, InputTicket, TicketRefinementOutput, ReasoningOutput, ReasoningStep, ReportOutput, PIIDetectionResult, GuardrailError
 from config.settings import OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE, OPENAI_MAX_TOKENS
 from config.constants import REASONING_AGENT
 from agents.specialized_agents import create_reasoning_agent, create_report_agent
 from utils.helpers import get_data_path, get_prompts_path, get_sessions_path, ensure_directory_exists
+from utils.prompt_manager import get_prompt_manager
+from guardrails import check_ticket_for_pii
 
 
 def pattern_analysis(state: SolutionState):
@@ -52,17 +55,93 @@ def create_session_folder():
     date_str = now.strftime("%m%d%Y_%H%M")
     uuid_str = str(uuid.uuid4())[:4]
     session_id = f"{date_str}_{uuid_str}"
-    
+
     session_path = get_sessions_path(session_id)
     ensure_directory_exists(session_path)
-    
+
     return session_id, str(session_path)
+
+
+def pii_guardrail_check(state: SolutionState):
+    """
+    Input Guardrails - First step in the workflow
+
+    Scans incoming ticket for Personally Identifiable Information (PII).
+    If PII is detected, creates error.json and routes to END.
+    If no PII detected, proceeds to Query Refinement Check.
+    """
+    # Create session folder first
+    session_id, session_path = create_session_folder()
+
+    # Extract ticket description from messages
+    ticket_description = ""
+    messages = state.get("messages", [])
+
+    # Look for ticket input in messages
+    for message in messages:
+        if hasattr(message, 'content') and message.content:
+            content = message.content
+            if content.startswith("Process this ticket:"):
+                ticket_description = content.replace("Process this ticket:", "").strip()
+                break
+
+    # Fallback to sample ticket if no ticket found in messages
+    if not ticket_description:
+        ticket_data = load_sample_ticket()
+        ticket_description = ticket_data.get("ticket_description", "")
+
+    # Run PII detection using NeMo Guardrails + Presidio
+    pii_result = check_ticket_for_pii(ticket_description, session_id=session_id)
+
+    # If PII detected, create error and save to session folder
+    if pii_result.pii_found:
+        guardrail_error = GuardrailError(
+            error_type="PII_DETECTED",
+            error_message=f"Ticket contains personally identifiable information (PII) and cannot be processed. Found {pii_result.pii_count} PII item(s) of types: {', '.join(pii_result.pii_types)}",
+            detection_result=pii_result,
+            session_id=session_id,
+            timestamp=datetime.now().isoformat()
+        )
+
+        # Save error.json to session folder
+        error_file = os.path.join(session_path, "error.json")
+        with open(error_file, 'w') as f:
+            json.dump(guardrail_error.model_dump(), f, indent=2)
+
+        # Log to console
+        print(f"\n⚠️  PII DETECTED - Workflow terminated")
+        print(f"Session: {session_id}")
+        print(f"PII Types Found: {', '.join(pii_result.pii_types)}")
+        print(f"Detection Method: NeMo Guardrails + Presidio")
+        print(f"Error details saved to: {error_file}\n")
+
+        # Return state with error information - will route to END
+        return {
+            "messages": state["messages"] + [AIMessage(content=f"PII detected in ticket. Processing terminated. Session: {session_id}")],
+            "pii_detection_result": pii_result,
+            "guardrail_error": guardrail_error
+        }
+
+    # No PII detected - proceed normally
+    print(f"\n✓ Input Guardrails Passed - No PII detected (NeMo Guardrails + Presidio)")
+    print(f"Session: {session_id}\n")
+
+    # Store session_id and PII result in state for downstream nodes
+    return {
+        "messages": state["messages"] + [AIMessage(content=f"PII check passed. Session: {session_id}")],
+        "pii_detection_result": pii_result
+    }
 
 
 def query_refinement_check(state: SolutionState):
     """Query Refinement Check agent that analyzes ticket completeness"""
-    # Create session folder
-    session_id, session_path = create_session_folder()
+    # Reuse session from PII check if available, otherwise create new session
+    if "pii_detection_result" in state and state["pii_detection_result"]:
+        session_id = state["pii_detection_result"].session_id
+        session_path = str(get_sessions_path(session_id))
+    else:
+        # Fallback: create session folder if PII check was skipped
+        session_id, session_path = create_session_folder()
     
     # Check for ticket input in messages first, then fallback to sample ticket
     ticket_description = ""
@@ -96,18 +175,26 @@ def query_refinement_check(state: SolutionState):
         category=ticket_data.get("category")
     )
     
-    # Load prompt from file
-    prompt_path = get_prompts_path("query_refinement_check_with_refined.txt")
-    with open(prompt_path, 'r') as f:
-        prompt_template = f.read()
-    
-    # Create the LLM
+    # Get prompt from PromptManager with fallback to local file
+    prompt_manager = get_prompt_manager()
+    prompt_data = prompt_manager.get_prompt("query-refinement-check-with-refined", label="production")
+
+    # Get model configuration from prompt metadata with defaults
+    model_config = prompt_data.get_model_config({
+        "model": OPENAI_MODEL,
+        "temperature": OPENAI_TEMPERATURE,
+        "max_tokens": OPENAI_MAX_TOKENS
+    })
+
+    # Create the LLM with configuration from prompt
     llm = ChatOpenAI(
         openai_api_key=OPENAI_API_KEY,
-        model=OPENAI_MODEL,
-        temperature=OPENAI_TEMPERATURE,
-        max_tokens=OPENAI_MAX_TOKENS
+        model=model_config["model"],
+        temperature=model_config["temperature"],
+        max_tokens=model_config["max_tokens"]
     )
+
+    prompt_template = prompt_data.get_langchain_prompt()
     
     # Create the prompt with ticket data
     full_prompt = f"{prompt_template}\n\nTicket to analyze: {ticket_description}"
@@ -185,19 +272,27 @@ def ticket_refinement_step(state: SolutionState):
     
     input_ticket = state["input_ticket"]
     session_id = state["query_refinement_output"]["session_id"] if "query_refinement_output" in state else "unknown"
-    
-    # Load refinement prompt
-    prompt_path = get_prompts_path("ticket_refinement.txt")
-    with open(prompt_path, 'r') as f:
-        prompt_template = f.read()
-    
-    # Create the LLM
+
+    # Get prompt from PromptManager with fallback to local file
+    prompt_manager = get_prompt_manager()
+    prompt_data = prompt_manager.get_prompt("ticket-refinement", label="production")
+
+    # Get model configuration from prompt metadata with defaults
+    model_config = prompt_data.get_model_config({
+        "model": OPENAI_MODEL,
+        "temperature": OPENAI_TEMPERATURE,
+        "max_tokens": OPENAI_MAX_TOKENS
+    })
+
+    # Create the LLM with configuration from prompt
     llm = ChatOpenAI(
         openai_api_key=OPENAI_API_KEY,
-        model=OPENAI_MODEL,
-        temperature=OPENAI_TEMPERATURE,
-        max_tokens=OPENAI_MAX_TOKENS
+        model=model_config["model"],
+        temperature=model_config["temperature"],
+        max_tokens=model_config["max_tokens"]
     )
+
+    prompt_template = prompt_data.get_langchain_prompt()
     
     # Create the prompt with original ticket
     full_prompt = f"{prompt_template}\n\nOriginal ticket to refine: {input_ticket.ticket_description}"
@@ -255,6 +350,21 @@ def ticket_refinement_step(state: SolutionState):
     }
 
 
+def route_after_pii_check(state: SolutionState) -> Literal["Query Refinement Check", END]:
+    """
+    Router function after Input Guardrails.
+
+    Routes to END if PII is detected (guardrail error exists).
+    Routes to Query Refinement Check if no PII detected.
+    """
+    # Check if guardrail error exists (PII detected)
+    if "guardrail_error" in state and state["guardrail_error"]:
+        return END
+
+    # No PII detected - proceed to query refinement
+    return "Query Refinement Check"
+
+
 def query_refinement(state: SolutionState) -> Literal["Ticket Refinement Step", "Reasoning_Agent"]:
     """Router function that reads routing decision from state"""
     # Check if we have query refinement output in state with routing decision
@@ -267,17 +377,19 @@ def query_refinement(state: SolutionState) -> Literal["Ticket Refinement Step", 
         elif next_step == "Label Analysis Step":
             return REASONING_AGENT  # Skip directly to reasoning since analysis steps are commented out
         return REASONING_AGENT  # Default to reasoning agent
-    
+
     # Default fallback if no state available
     return REASONING_AGENT
 
 
 def reasoning_agent_node(state: SolutionState):
     """Reasoning Agent node that creates step-by-step solution plans"""
+    from utils.langfuse_config import get_langfuse_handler
+
     # Determine input ticket - priority: refined > original > sample
     ticket_to_analyze = None
     session_id = "unknown"
-    
+
     # Check for refined ticket first
     if "ticket_refinement_output" in state and state["ticket_refinement_output"]:
         ticket_to_analyze = state["ticket_refinement_output"].refined_ticket
@@ -291,15 +403,29 @@ def reasoning_agent_node(state: SolutionState):
         ticket_data = load_sample_ticket()
         ticket_to_analyze = ticket_data.get("ticket_description", "No ticket available")
         session_id = f"fallback_{datetime.now().strftime('%m%d%Y_%H%M')}"
-    
+
     # Create the reasoning react agent
     reasoning_agent = create_reasoning_agent()
-    
+
     # Create the input message with ticket to analyze
     input_message = f"Ticket to analyze: {ticket_to_analyze}"
-    
-    # Get response from reasoning agent
-    response = reasoning_agent.invoke({"messages": [HumanMessage(content=input_message)]})
+
+    # Get LangFuse handler with session correlation
+    langfuse_handler = get_langfuse_handler(
+        session_id=session_id,
+        trace_name=f"reasoning_agent_{session_id}"
+    )
+
+    # Build config with callbacks
+    config = {}
+    if langfuse_handler:
+        config["callbacks"] = [langfuse_handler]
+
+    # Get response from reasoning agent with tracing
+    response = reasoning_agent.invoke(
+        {"messages": [HumanMessage(content=input_message)]},
+        config=config
+    )
     
     # Extract the latest AI message content for logging/display
     ai_messages = [msg for msg in response["messages"] if isinstance(msg, AIMessage)]
@@ -374,9 +500,11 @@ def reasoning_agent_node(state: SolutionState):
 
 def report_agent_node(state: SolutionState):
     """Report Agent node that generates final resolution reports and saves them as markdown"""
+    from utils.langfuse_config import get_langfuse_handler
+
     # Determine session_id from available state
     session_id = "unknown"
-    
+
     # Try to get session_id from various state sources
     if "reasoning_output" in state and state["reasoning_output"]:
         session_id = state["reasoning_output"].session_id
@@ -391,10 +519,10 @@ def report_agent_node(state: SolutionState):
     else:
         # Fallback session ID
         session_id = f"report_{datetime.now().strftime('%m%d%Y_%H%M')}"
-    
+
     # Create the report react agent
     report_agent = create_report_agent()
-    
+
     # Prepare summary of all previous agent outputs for the report agent
     summary_content = "Generate a final resolution report based on the following agent outputs:\n\n"
     
@@ -435,9 +563,23 @@ def report_agent_node(state: SolutionState):
     
     summary_content += f"Session ID: {session_id}\n"
     summary_content += "Please generate a comprehensive final report with all required fields."
-    
-    # Get response from report agent
-    response = report_agent.invoke({"messages": [HumanMessage(content=summary_content)]})
+
+    # Get LangFuse handler with session correlation
+    langfuse_handler = get_langfuse_handler(
+        session_id=session_id,
+        trace_name=f"report_agent_{session_id}"
+    )
+
+    # Build config with callbacks
+    config = {}
+    if langfuse_handler:
+        config["callbacks"] = [langfuse_handler]
+
+    # Get response from report agent with tracing
+    response = report_agent.invoke(
+        {"messages": [HumanMessage(content=summary_content)]},
+        config=config
+    )
     
     # Extract the latest AI message content for logging/display
     ai_messages = [msg for msg in response["messages"] if isinstance(msg, AIMessage)]

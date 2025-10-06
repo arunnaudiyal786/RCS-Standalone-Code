@@ -194,6 +194,33 @@ class SupervisorOutput(BaseModel):
     timestamp: str
 
 
+class PIIDetectionItem(BaseModel):
+    """Individual PII detection item"""
+    pii_type: str  # EMAIL, SSN, PHONE, CREDIT_CARD, etc.
+    pattern_matched: str
+    location: int  # Character position in text
+
+
+class PIIDetectionResult(BaseModel):
+    """Result of PII detection scan"""
+    pii_found: bool
+    pii_types: List[str]
+    pii_count: int
+    detection_details: List[PIIDetectionItem]
+    ticket_excerpt: str  # First 100 chars of ticket
+    session_id: str
+    timestamp: str
+
+
+class GuardrailError(BaseModel):
+    """Error output when guardrail is triggered"""
+    error_type: str  # "PII_DETECTED"
+    error_message: str
+    detection_result: PIIDetectionResult
+    session_id: str
+    timestamp: str
+
+
 class SolutionState(TypedDict, total=False):
     messages: List[HumanMessage | AIMessage | ToolMessage | SystemMessage]
     query_refinement_output: Optional[QueryRefinementOutput]
@@ -205,3 +232,5 @@ class SolutionState(TypedDict, total=False):
     validation_output: Optional[ValidationOutput]
     report_output: Optional[ReportOutput]
     supervisor_output: Optional[SupervisorOutput]
+    pii_detection_result: Optional[PIIDetectionResult]
+    guardrail_error: Optional[GuardrailError]
