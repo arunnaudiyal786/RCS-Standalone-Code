@@ -7,7 +7,8 @@ from config.constants import INFO_RETRIEVER_AGENT, EXECUTION_AGENT, VALIDATION_A
 from graph.nodes import (
     query_refinement, query_refinement_check,
     ticket_refinement_step, reasoning_agent_node, report_agent_node,
-    pii_guardrail_check, route_after_pii_check
+    # GUARDRAILS DISABLED - Imports commented out (node removed from graph)
+    # pii_guardrail_check, route_after_pii_check
 )
 from agents.specialized_agents import (
     create_info_retriever_agent, create_execution_agent,
@@ -58,9 +59,10 @@ def create_supervisor_graph():
     )
     
     # Create multi-agent supervisor graph from scratch
+    # GUARDRAILS DISABLED - Removed "Input Guardrails" node and routing
     supervisor_graph = (
         StateGraph(MessagesState)
-        .add_node("Input Guardrails", pii_guardrail_check)
+        # .add_node("Input Guardrails", pii_guardrail_check)  # DISABLED
         .add_node("Query Refinement Check", query_refinement_check)
         .add_node("Ticket Refinement Step", ticket_refinement_step)
         .add_node(REASONING_AGENT, reasoning_agent_node)
@@ -69,8 +71,9 @@ def create_supervisor_graph():
         .add_node(execution_agent)
         .add_node(validation_agent)
         .add_node(REPORT_AGENT, report_agent_node)
-        .add_edge(START, "Input Guardrails")
-        .add_conditional_edges("Input Guardrails", route_after_pii_check)
+        # GUARDRAILS DISABLED - Start directly at Query Refinement Check
+        .add_edge(START, "Query Refinement Check")  # Changed from "Input Guardrails"
+        # .add_conditional_edges("Input Guardrails", route_after_pii_check)  # DISABLED
         .add_conditional_edges("Query Refinement Check", query_refinement)
         .add_edge("Ticket Refinement Step", REASONING_AGENT)
         .add_edge(REASONING_AGENT, SUPERVISOR_AGENT)

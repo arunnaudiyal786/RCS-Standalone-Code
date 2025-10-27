@@ -12,6 +12,7 @@ from config.constants import REASONING_AGENT
 from agents.specialized_agents import create_reasoning_agent, create_report_agent
 from utils.helpers import get_data_path, get_prompts_path, get_sessions_path, ensure_directory_exists
 from utils.prompt_manager import get_prompt_manager
+# GUARDRAILS DISABLED - Import kept but function is now a stub
 from guardrails import check_ticket_for_pii
 
 
@@ -66,9 +67,15 @@ def pii_guardrail_check(state: SolutionState):
     """
     Input Guardrails - First step in the workflow
 
+    ============================================================================
+    GUARDRAILS DISABLED - PII check is now a stub that always passes
+    ============================================================================
+
     Scans incoming ticket for Personally Identifiable Information (PII).
     If PII is detected, creates error.json and routes to END.
     If no PII detected, proceeds to Query Refinement Check.
+
+    NOTE: With guardrails disabled, this function always passes (no PII found).
     """
     # Create session folder first
     session_id, session_path = create_session_folder()
@@ -123,7 +130,8 @@ def pii_guardrail_check(state: SolutionState):
         }
 
     # No PII detected - proceed normally
-    print(f"\n✓ Input Guardrails Passed - No PII detected (NeMo Guardrails + Presidio)")
+    # GUARDRAILS DISABLED - This will always execute now
+    print(f"\n✓ Input Guardrails Bypassed (DISABLED) - PII check skipped")
     print(f"Session: {session_id}\n")
 
     # Store session_id and PII result in state for downstream nodes
@@ -384,7 +392,8 @@ def query_refinement(state: SolutionState) -> Literal["Ticket Refinement Step", 
 
 def reasoning_agent_node(state: SolutionState):
     """Reasoning Agent node that creates step-by-step solution plans"""
-    from utils.langfuse_config import get_langfuse_handler
+    # LANGFUSE DISABLED - Import commented out
+    # from utils.langfuse_config import get_langfuse_handler
 
     # Determine input ticket - priority: refined > original > sample
     ticket_to_analyze = None
@@ -410,21 +419,21 @@ def reasoning_agent_node(state: SolutionState):
     # Create the input message with ticket to analyze
     input_message = f"Ticket to analyze: {ticket_to_analyze}"
 
+    # LANGFUSE DISABLED - Handler and config commented out
     # Get LangFuse handler with session correlation
-    langfuse_handler = get_langfuse_handler(
-        session_id=session_id,
-        trace_name=f"reasoning_agent_{session_id}"
-    )
+    # langfuse_handler = get_langfuse_handler(
+    #     session_id=session_id,
+    #     trace_name=f"reasoning_agent_{session_id}"
+    # )
 
     # Build config with callbacks
-    config = {}
-    if langfuse_handler:
-        config["callbacks"] = [langfuse_handler]
+    # config = {}
+    # if langfuse_handler:
+    #     config["callbacks"] = [langfuse_handler]
 
-    # Get response from reasoning agent with tracing
+    # Get response from reasoning agent (without tracing)
     response = reasoning_agent.invoke(
-        {"messages": [HumanMessage(content=input_message)]},
-        config=config
+        {"messages": [HumanMessage(content=input_message)]}
     )
     
     # Extract the latest AI message content for logging/display
@@ -500,7 +509,8 @@ def reasoning_agent_node(state: SolutionState):
 
 def report_agent_node(state: SolutionState):
     """Report Agent node that generates final resolution reports and saves them as markdown"""
-    from utils.langfuse_config import get_langfuse_handler
+    # LANGFUSE DISABLED - Import commented out
+    # from utils.langfuse_config import get_langfuse_handler
 
     # Determine session_id from available state
     session_id = "unknown"
@@ -564,21 +574,21 @@ def report_agent_node(state: SolutionState):
     summary_content += f"Session ID: {session_id}\n"
     summary_content += "Please generate a comprehensive final report with all required fields."
 
+    # LANGFUSE DISABLED - Handler and config commented out
     # Get LangFuse handler with session correlation
-    langfuse_handler = get_langfuse_handler(
-        session_id=session_id,
-        trace_name=f"report_agent_{session_id}"
-    )
+    # langfuse_handler = get_langfuse_handler(
+    #     session_id=session_id,
+    #     trace_name=f"report_agent_{session_id}"
+    # )
 
     # Build config with callbacks
-    config = {}
-    if langfuse_handler:
-        config["callbacks"] = [langfuse_handler]
+    # config = {}
+    # if langfuse_handler:
+    #     config["callbacks"] = [langfuse_handler]
 
-    # Get response from report agent with tracing
+    # Get response from report agent (without tracing)
     response = report_agent.invoke(
-        {"messages": [HumanMessage(content=summary_content)]},
-        config=config
+        {"messages": [HumanMessage(content=summary_content)]}
     )
     
     # Extract the latest AI message content for logging/display

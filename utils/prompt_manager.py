@@ -1,19 +1,23 @@
 """
 Langfuse Prompt Management Integration
 
-Provides centralized prompt management with Langfuse cloud/self-hosted instance
-with fallback to local file-based prompts for reliability.
+============================================================================
+LANGFUSE FUNCTIONALITY TEMPORARILY DISABLED
+============================================================================
+Provides centralized prompt management with local file-based prompts only.
+Langfuse cloud integration is disabled.
 """
 import os
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
-from langfuse import Langfuse
+# LANGFUSE DISABLED - Import commented out
+# from langfuse import Langfuse
 from config.settings import (
-    LANGFUSE_PUBLIC_KEY,
-    LANGFUSE_SECRET_KEY,
-    LANGFUSE_HOST,
-    LANGFUSE_ENABLED,
-    LANGFUSE_PROMPT_MANAGEMENT_ENABLED,
+    # LANGFUSE_PUBLIC_KEY,
+    # LANGFUSE_SECRET_KEY,
+    # LANGFUSE_HOST,
+    # LANGFUSE_ENABLED,
+    # LANGFUSE_PROMPT_MANAGEMENT_ENABLED,
     LANGFUSE_PROMPT_FALLBACK_TO_LOCAL,
     LANGFUSE_PROMPT_CACHE_TTL
 )
@@ -78,18 +82,20 @@ class PromptManager:
         self._langfuse_client = None
         self._cache = {}
 
+        # LANGFUSE DISABLED - Client initialization commented out
         # Initialize Langfuse client if enabled
-        if LANGFUSE_ENABLED and LANGFUSE_PROMPT_MANAGEMENT_ENABLED:
-            try:
-                self._langfuse_client = Langfuse(
-                    public_key=LANGFUSE_PUBLIC_KEY,
-                    secret_key=LANGFUSE_SECRET_KEY,
-                    host=LANGFUSE_HOST
-                )
-                print("PromptManager: Langfuse client initialized successfully")
-            except Exception as e:
-                print(f"PromptManager: Failed to initialize Langfuse client: {e}")
-                self._langfuse_client = None
+        # if LANGFUSE_ENABLED and LANGFUSE_PROMPT_MANAGEMENT_ENABLED:
+        #     try:
+        #         self._langfuse_client = Langfuse(
+        #             public_key=LANGFUSE_PUBLIC_KEY,
+        #             secret_key=LANGFUSE_SECRET_KEY,
+        #             host=LANGFUSE_HOST
+        #         )
+        #         print("PromptManager: Langfuse client initialized successfully")
+        #     except Exception as e:
+        #         print(f"PromptManager: Failed to initialize Langfuse client: {e}")
+        #         self._langfuse_client = None
+        print("PromptManager: Initialized with local file support only (Langfuse disabled)")
 
     def get_prompt(self, name: str, label: str = "production", version: Optional[int] = None) -> PromptData:
         """
@@ -115,56 +121,55 @@ class PromptManager:
                 print(f"PromptManager: Using cached prompt for '{name}' (label: {label})")
                 return cached_prompt
 
+        # LANGFUSE DISABLED - Skip Langfuse fetch, use local files only
         # Try Langfuse first if enabled
-        if self._langfuse_client and LANGFUSE_PROMPT_MANAGEMENT_ENABLED:
-            try:
-                prompt_data = self._fetch_from_langfuse(name, label, version)
-                # Cache the result
-                self._cache[cache_key] = (prompt_data, datetime.now())
-                print(f"PromptManager: Fetched prompt '{name}' from Langfuse (label: {label}, version: {prompt_data.version})")
-                return prompt_data
-            except Exception as e:
-                print(f"PromptManager: Failed to fetch prompt '{name}' from Langfuse: {e}")
-                if not LANGFUSE_PROMPT_FALLBACK_TO_LOCAL:
-                    raise Exception(f"Failed to fetch prompt '{name}' from Langfuse and fallback is disabled") from e
+        # if self._langfuse_client and LANGFUSE_PROMPT_MANAGEMENT_ENABLED:
+        #     try:
+        #         prompt_data = self._fetch_from_langfuse(name, label, version)
+        #         # Cache the result
+        #         self._cache[cache_key] = (prompt_data, datetime.now())
+        #         print(f"PromptManager: Fetched prompt '{name}' from Langfuse (label: {label}, version: {prompt_data.version})")
+        #         return prompt_data
+        #     except Exception as e:
+        #         print(f"PromptManager: Failed to fetch prompt '{name}' from Langfuse: {e}")
+        #         if not LANGFUSE_PROMPT_FALLBACK_TO_LOCAL:
+        #             raise Exception(f"Failed to fetch prompt '{name}' from Langfuse and fallback is disabled") from e
 
-        # Fallback to local file
-        if LANGFUSE_PROMPT_FALLBACK_TO_LOCAL or not LANGFUSE_PROMPT_MANAGEMENT_ENABLED:
-            try:
-                prompt_data = self._fetch_from_local(name)
-                # Cache the result
-                self._cache[cache_key] = (prompt_data, datetime.now())
-                print(f"PromptManager: Using local file for prompt '{name}'")
-                return prompt_data
-            except Exception as e:
-                raise Exception(f"Failed to fetch prompt '{name}' from both Langfuse and local files") from e
+        # Always use local files (Langfuse disabled)
+        try:
+            prompt_data = self._fetch_from_local(name)
+            # Cache the result
+            self._cache[cache_key] = (prompt_data, datetime.now())
+            print(f"PromptManager: Using local file for prompt '{name}'")
+            return prompt_data
+        except Exception as e:
+            raise Exception(f"Failed to fetch prompt '{name}' from local files") from e
 
-        raise Exception(f"Could not fetch prompt '{name}' - all methods failed")
+    # LANGFUSE DISABLED - Method commented out
+    # def _fetch_from_langfuse(self, name: str, label: str = "production", version: Optional[int] = None) -> PromptData:
+    #     """
+    #     Fetch prompt from Langfuse by name and label/version
+    #     """
+    #     if version is not None:
+    #         langfuse_prompt = self._langfuse_client.get_prompt(name, version=version)
+    #     else:
+    #         langfuse_prompt = self._langfuse_client.get_prompt(name, label=label)
 
-    def _fetch_from_langfuse(self, name: str, label: str = "production", version: Optional[int] = None) -> PromptData:
-        """
-        Fetch prompt from Langfuse by name and label/version
-        """
-        if version is not None:
-            langfuse_prompt = self._langfuse_client.get_prompt(name, version=version)
-        else:
-            langfuse_prompt = self._langfuse_client.get_prompt(name, label=label)
+    #     # Extract prompt text using Langfuse SDK method
+    #     # For text prompts, use the prompt directly
+    #     # For chat prompts, we need to format them appropriately
+    #     if hasattr(langfuse_prompt, 'get_langchain_prompt'):
+    #         prompt_text = langfuse_prompt.get_langchain_prompt()
+    #     else:
+    #         prompt_text = langfuse_prompt.prompt
 
-        # Extract prompt text using Langfuse SDK method
-        # For text prompts, use the prompt directly
-        # For chat prompts, we need to format them appropriately
-        if hasattr(langfuse_prompt, 'get_langchain_prompt'):
-            prompt_text = langfuse_prompt.get_langchain_prompt()
-        else:
-            prompt_text = langfuse_prompt.prompt
-
-        return PromptData(
-            name=name,
-            prompt_text=prompt_text,
-            config=langfuse_prompt.config if hasattr(langfuse_prompt, 'config') else {},
-            version=langfuse_prompt.version if hasattr(langfuse_prompt, 'version') else None,
-            label=label
-        )
+    #     return PromptData(
+    #         name=name,
+    #         prompt_text=prompt_text,
+    #         config=langfuse_prompt.config if hasattr(langfuse_prompt, 'config') else {},
+    #         version=langfuse_prompt.version if hasattr(langfuse_prompt, 'version') else None,
+    #         label=label
+    #     )
 
     def _fetch_from_local(self, name: str) -> PromptData:
         """

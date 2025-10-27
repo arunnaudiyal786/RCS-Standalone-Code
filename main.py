@@ -7,7 +7,8 @@ import subprocess
 import nest_asyncio
 from graph.supervisor_graph import create_supervisor_graph
 from utils.helpers import pretty_print_messages
-from utils.langfuse_config import get_langfuse_handler
+# LANGFUSE DISABLED - Import commented out
+# from utils.langfuse_config import get_langfuse_handler
 
 # Apply nest_asyncio for async compatibility
 nest_asyncio.apply()
@@ -43,36 +44,37 @@ def main(ticket_input: str = None):
     
     # Run the workflow with ticket input
     try:
+        # LANGFUSE DISABLED - Handler and metadata commented out
         # Create LangFuse handler with session correlation
-        langfuse_handler = get_langfuse_handler(
-            session_id="test_session_1",
-            trace_name="supervisor_workflow_execution"
-        )
+        # langfuse_handler = get_langfuse_handler(
+        #     session_id="test_session_1",
+        #     trace_name="supervisor_workflow_execution"
+        # )
 
-        # Build config with LangFuse callbacks
+        # Build config (without LangFuse callbacks)
         config = {
             "configurable": {"thread_id": "test_session_1"},
             "recursion_limit": 50
         }
 
         # Add callbacks and prompt version tracking metadata if LangFuse is enabled
-        if langfuse_handler:
-            config["callbacks"] = [langfuse_handler]
-            # Add metadata for prompt version tracking
-            config["metadata"] = {
-                "prompt_versions": {
-                    "reasoning_agent": "production",
-                    "supervisor_agent": "production",
-                    "info_retriever_agent": "production",
-                    "execution_agent": "production",
-                    "validation_agent": "production",
-                    "report_agent": "production",
-                    "query_refinement_check": "production",
-                    "ticket_refinement": "production"
-                },
-                "prompt_management_enabled": True
-            }
-            print("LangFuse tracing enabled for this execution with prompt version tracking")
+        # if langfuse_handler:
+        #     config["callbacks"] = [langfuse_handler]
+        #     # Add metadata for prompt version tracking
+        #     config["metadata"] = {
+        #         "prompt_versions": {
+        #             "reasoning_agent": "production",
+        #             "supervisor_agent": "production",
+        #             "info_retriever_agent": "production",
+        #             "execution_agent": "production",
+        #             "validation_agent": "production",
+        #             "report_agent": "production",
+        #             "query_refinement_check": "production",
+        #             "ticket_refinement": "production"
+        #         },
+        #         "prompt_management_enabled": True
+        #     }
+        #     print("LangFuse tracing enabled for this execution with prompt version tracking")
 
         for chunk in supervisor.stream(
             {"messages": [{"role": "user", "content": message_content}]},
